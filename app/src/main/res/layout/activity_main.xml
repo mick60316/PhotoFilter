@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    tools:context=".MainActivity">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="28px"
+        android:layout_marginTop="28px"
+        android:orientation="vertical"
+
+        >
+
+        <ImageView
+            android:id="@+id/src_imageview"
+            android:src="@drawable/img2"
+
+            android:layout_width="1024px"
+            android:layout_height="620px">
+        </ImageView>
+
+        <RadioGroup
+            android:layout_marginTop="30px"
+            android:layout_width="1024px"
+            android:layout_height="wrap_content"
+            android:background="#AAAAAA"
+            android:orientation="horizontal"
+            >
+
+            <RadioButton
+                android:checked="true"
+                android:id="@+id/radioButton3"
+                android:layout_width="300px"
+                android:layout_height="wrap_content"
+                android:text="Normal"
+                android:textColor="#FFFFFF" />
+            <RadioButton
+                android:id="@+id/radioButton2"
+                android:layout_width="300px"
+                android:layout_height="wrap_content"
+                android:text="Xpro-II"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/radioButton"
+                android:layout_width="300px"
+                android:layout_height="wrap_content"
+                android:text="Cartoon"
+                android:textColor="#FFFFFF" />
+        </RadioGroup>
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
