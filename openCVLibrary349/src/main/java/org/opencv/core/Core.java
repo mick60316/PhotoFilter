@@ -3917,7 +3917,6 @@ public class Core {
      * @param src1 first input array.
      * @param src2 second input array of the same size and type as src1 .
      * @param dst output array of the same size and type as src1.
-     * SEE:  min, compare, inRange, minMaxLoc, REF: MatrixExpressions
      */
     public static void max(Mat src1, Mat src2, Mat dst) {
         max_0(src1.nativeObj, src2.nativeObj, dst.nativeObj);
@@ -4022,7 +4021,6 @@ public class Core {
      * @param src1 first input array.
      * @param src2 second input array of the same size and type as src1.
      * @param dst output array of the same size and type as src1.
-     * SEE: max, compare, inRange, minMaxLoc
      */
     public static void min(Mat src1, Mat src2, Mat dst) {
         min_0(src1.nativeObj, src2.nativeObj, dst.nativeObj);

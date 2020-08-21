@@ -17,41 +17,43 @@
 
         <ImageView
             android:id="@+id/src_imageview"
-            android:src="@drawable/img2"
+            android:src="@drawable/img"
 
             android:layout_width="1024px"
             android:layout_height="620px">
         </ImageView>
 
         <RadioGroup
+            android:id="@+id/filer_group"
             android:layout_marginTop="30px"
             android:layout_width="1024px"
             android:layout_height="wrap_content"
             android:background="#AAAAAA"
             android:orientation="horizontal"
             >
-
             <RadioButton
                 android:checked="true"
-                android:id="@+id/radioButton3"
+                android:id="@+id/normal_filter_radio"
                 android:layout_width="300px"
                 android:layout_height="wrap_content"
                 android:text="Normal"
                 android:textColor="#FFFFFF" />
             <RadioButton
-                android:id="@+id/radioButton2"
+                android:id="@+id/warm_filter_radio"
                 android:layout_width="300px"
                 android:layout_height="wrap_content"
                 android:text="Xpro-II"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
-                android:id="@+id/radioButton"
+                android:id="@+id/cartoon_filter_radio"
                 android:layout_width="300px"
                 android:layout_height="wrap_content"
                 android:text="Cartoon"
                 android:textColor="#FFFFFF" />
         </RadioGroup>
+
+
 
     </LinearLayout>
 
