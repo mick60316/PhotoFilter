@@ -42,7 +42,7 @@
                 android:id="@+id/warm_filter_radio"
                 android:layout_width="300px"
                 android:layout_height="wrap_content"
-                android:text="Xpro-II"
+                android:text="Warm"
                 android:textColor="#FFFFFF" />
 
             <RadioButton
