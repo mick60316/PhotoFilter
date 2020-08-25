@@ -3,13 +3,16 @@ package com.example.photofilter;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
+import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
-import android.widget.TextView;
+import android.widget.SeekBar;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -19,9 +22,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +35,23 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
 
     private RadioGroup filerGroup;
+    private SeekBar [] seekBars=new SeekBar[6];
+    private ScaleGestureDetector mScaleGestureDetector;
+
     private static  String MikeTAG ="Mike";
     private ImageView sourceImage;
     private Mat srcImg;
+    private Mat processImage;
     private Mat roiImage;
+    private Mat dstImg;
     private Rect roi =new Rect(700,400,500,500);
+
+    private float mScaleFactor = 1.0f;
+
+    private static PointF touchScreenStartPtArr[] = new PointF[10];
+    private static PointF touchScreenStopPtArr[] = new PointF[10];
+    private static PointF touchScreenCurrPtArr[] = new PointF[10];
+
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -67,13 +80,18 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
         }
         srcImg=new Mat();
+        dstImg =new Mat();
+        processImage =new Mat();
         BitmapDrawable bitmapDrawable = (BitmapDrawable) sourceImage.getDrawable();
         Bitmap bitmap =bitmapDrawable.getBitmap();
         Utils.bitmapToMat(bitmap,srcImg);
+        processImage =srcImg.clone();
         //Imgproc.cvtColor(srcImg,srcImg,Imgproc.COLOR_BGR2RGB);
 
-        roiImage =new Mat(srcImg,roi);
-        updateImageview(roiImage);
+        mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+
+      //  roiImage =new Mat(srcImg,roi);
+        updateImageview(processImage);
 
     }
 
@@ -86,11 +104,27 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private void  linkUserInterface ()
     {
 
+        SeekBarListener seekBarListener =new SeekBarListener();
+        ImageViewTouchListener imageViewTouchListener =new ImageViewTouchListener();
+
         filerGroup= findViewById(R.id.filer_group);
         sourceImage =findViewById(R.id.src_imageview);
+        sourceImage.setOnTouchListener(imageViewTouchListener);
+
+
+        seekBars[0] =findViewById(R.id.contrast_bar);
+        seekBars[1] =findViewById(R.id.brightness_bar);
+        seekBars[2] =findViewById(R.id.rotate_x_bar);
+        seekBars[3] =findViewById(R.id.rotate_y_bar);
+        seekBars[4] =findViewById(R.id.rotate_z_bar);
+        seekBars[5] =findViewById(R.id.saturation_bar);
+
+        for (int i =0;i<seekBars.length ;i++)
+        {
+            seekBars[i].setOnSeekBarChangeListener(seekBarListener);
+
+        }
         filerGroup.setOnCheckedChangeListener(this);
-
-
     }
 
     @Override
@@ -103,12 +137,12 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
                 case R.id.cartoon_filter_radio:
                     MikeLog("cartoon");
-                    cartoonFiler(roiImage);
+                    updateImageview(ImageProcess.CartoonFilter(roiImage));
                     //updateImageview(index);
                     break;
                 case R.id.warm_filter_radio:
                     MikeLog("warm");
-                    warmFilter(roiImage);
+                    updateImageview(ImageProcess.WarmFilter(roiImage));
                     break;
                 default:
                     break;
@@ -119,108 +153,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         Log.i(MikeTAG,msg);
     }
 
-    private void warmFilter (Mat inputMat)
+
+
+    private void updateImageview (Mat inputMat)
     {
-
-        float [] originalValue =new  float[] { 0,50,100,150,200,255 };
-        //Changed points on Y-axis for red and blue channels
-        float [] redValue = new float []{ 0,80,150,190,220,255 };
-        float [] blueValue = new float[]{ 0,20,40,75,150,255 };
-        Mat result = new Mat();
-        List<Mat> lab_list = new ArrayList(3);
-        Core.split(inputMat,lab_list);
-
-        Mat lookupTable=new Mat(1, 256, CV_8U);
-
-        //uchar* lut = lookupTable.ptr();
-
-        for (int i = 0; i < 256; i++) {
-            int j = 0;
-            float xval = (float)i;
-            while (xval > originalValue[j]) {
-                j++;
-            }
-            if (xval == originalValue[j]) {
-                lookupTable.put(0,i,redValue[j]);
-
-                continue;
-            }
-            float slope = ((float)(redValue[j] - redValue[j - 1])) / ((float)(originalValue[j] - originalValue[j - 1]));
-            float constant = redValue[j] - slope * originalValue[j];
-
-            lookupTable.put(0,i,slope * xval + constant);
-            //cout << i << " " << slope << " " << constant << " " << lut[i] << endl;
-        }
-
-
-        Mat maxIndex=lab_list.get(2).clone().setTo(new Scalar(255));
-        Mat minIndex=lab_list.get(2).clone().setTo(new Scalar(0));
-
-
-        Core.LUT(lab_list.get(0),lookupTable,lab_list.get(0));
-        Core.min(lab_list.get(0),maxIndex,lab_list.get(0));
-        Core.max(lab_list.get(0),minIndex,lab_list.get(0));
-
-        Mat lookupTable2=new Mat(1, 256, CV_8U);
-
-
-        //Linear Interpolation applied to get values for all the points on X-Axis
-        for (int i = 0; i < 256; i++) {
-            int j = 0;
-            float xval = (float)i;
-            while (xval > originalValue[j]) {
-                j++;
-            }
-            if (xval == originalValue[j]) {
-                lookupTable2.put(0,i,blueValue[j]);
-                continue;
-            }
-            float slope = ((float)(blueValue[j] - blueValue[j - 1])) / ((float)(originalValue[j] - originalValue[j - 1]));
-            float constant = blueValue[j] - slope * originalValue[j];
-            lookupTable2.put(0,i,slope * xval + constant);
-        }
-
-        Core.LUT(lab_list.get(2),lookupTable2,lab_list.get(2));
-
-        Core.min(lab_list.get(2),maxIndex,lab_list.get(2));
-        Core.min(lab_list.get(2),minIndex,lab_list.get(2));
-
-        //Merge the channels
-        Core.merge(lab_list,result);
-        updateImageview(result);
-        //merge(channels, result);
-
-
-
-    }
-    private void cartoonFiler (Mat inputMat)
-    {
-        Mat img=inputMat.clone();
-        Imgproc.cvtColor(img,img,Imgproc.COLOR_BGRA2BGR);
-        Mat imgGray=new Mat();
-        Imgproc.cvtColor(img,imgGray,Imgproc.COLOR_BGR2GRAY);
-        Imgproc.GaussianBlur(imgGray,imgGray, new Size(3,3),0);
-        Imgproc.Laplacian(imgGray,imgGray, CV_8U,5);
-        Mat index =imgGray.clone();
-        index.setTo(new Scalar(255));
-        Core.subtract(index,imgGray,imgGray);
-        Mat edge_Mask =new Mat (imgGray.size(),imgGray.type());
-        Imgproc.threshold(imgGray,edge_Mask,150,255,Imgproc.THRESH_BINARY);
-        MikeLog(" "+CvType.CV_8UC3+" "+img.type());
-        Mat out=new Mat();
-        Imgproc.bilateralFilter(img,out,10,50,0);
-
-        //edgePreservingFilter(img,img,0,20,0.4f);
-        Mat output = Mat.zeros(imgGray.size(), CV_8UC3);
-        Core.bitwise_and(out,out,output,edge_Mask);
-        updateImageview(output);
-
-
-
-    }
-
-    private void updateImageview (Mat inputMat )
-    {
+        inputMat =new Mat (inputMat,roi);
         Bitmap newBp =Bitmap.createBitmap(inputMat.width(),inputMat.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(inputMat,newBp);
         sourceImage.setImageBitmap(newBp);
@@ -231,4 +168,139 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
      * which is packaged with this application.
      */
     public native String stringFromJNI();
+
+
+    private class SeekBarListener implements SeekBar.OnSeekBarChangeListener
+    {
+
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+            MikeLog("onProgressChanged");
+
+            switch(seekBar.getId())
+            {
+                case R.id.brightness_bar:
+                    processImage =ImageProcess.ImageBrightness(srcImg,i-100);
+
+                    break;
+                case R.id.contrast_bar:
+                    processImage=ImageProcess.ImageContrast(srcImg,i-100);
+                    break;
+                case R.id.rotate_x_bar:
+                    processImage=(ImageProcess.Rotate_X(srcImg,i-25));
+                    break;
+                case R.id.rotate_y_bar:
+                    processImage=(ImageProcess.Rotate_Y(srcImg,i-25));
+                    break;
+                case R.id.rotate_z_bar:
+                    processImage=(ImageProcess.Rotate_XY(srcImg,i-25));
+                    break;
+                case R.id.saturation_bar:
+                    processImage=(ImageProcess.HSV(srcImg,i-100));
+                    break;
+
+            }
+            updateImageview(processImage);
+
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+           // processImage =dstImg;
+//            BitmapDrawable bitmapDrawable = (BitmapDrawable) sourceImage.getDrawable();
+//            Bitmap bitmap =bitmapDrawable.getBitmap();
+//            Utils.bitmapToMat(bitmap,srcImg);
+            //srcImg =processImage;
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
+
+    private class ImageViewTouchListener implements View.OnTouchListener
+    {
+        float pointStartX=0,pointStartY=0;
+        float pointCurrentX=0,pointCurrentY=0;
+        float roiStartX =0,roiStartY= 0;
+
+
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            mScaleGestureDetector.onTouchEvent(motionEvent);
+
+            int action = motionEvent.getAction() & MotionEvent.ACTION_MASK;
+            int pointerIndex = (motionEvent.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+            int fingerId = motionEvent.getPointerId(pointerIndex);
+
+            MikeLog("pointerIndex "+pointerIndex +" "+motionEvent.getX(pointerIndex)+" "+motionEvent.getY(pointerIndex));
+
+
+
+            switch (motionEvent.getActionMasked())
+            {
+
+                case  MotionEvent.ACTION_DOWN:
+
+                    for (int i =0;i<motionEvent.getPointerCount();i++)
+                    {
+                        //MikeLog(" "+motionEvent.getPointerCount());
+
+                    }
+
+
+                    pointStartX =motionEvent.getRawX();
+                    pointStartY=motionEvent.getRawY();
+                    roiStartX =roi.x;
+                    roiStartY=roi.y;
+
+
+                    //MikeLog("DOWN DOWN");
+                    updateImageview(srcImg);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+
+                    pointCurrentX=motionEvent.getRawX();
+                    pointCurrentY=motionEvent.getRawY();
+
+                    int newPosX=(int)(roiStartX-(pointCurrentX-pointStartX));
+                    int newPosY =(int)(roiStartY -(pointCurrentY-pointStartY));
+                    if (newPosX >0 && newPosX <srcImg.width()-500*mScaleFactor) roi.x=newPosX;
+                    if (newPosY >0 && newPosY <srcImg.height()-500*mScaleFactor) roi.y=newPosY;
+
+                    MikeLog(" "+(newPosX)+" "+(newPosY)+" "+srcImg.width() +" "+srcImg.height());
+                    updateImageview(srcImg);
+
+                    break;
+                case MotionEvent.ACTION_UP:
+                    //MikeLog("UPUPUP");
+                    updateImageview(processImage);
+                    break;
+
+            }
+            return true;
+        }
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+            mScaleFactor *= scaleGestureDetector.getScaleFactor();
+            mScaleFactor = Math.max(0.1f,
+                    Math.min(mScaleFactor, 2.0f));
+            roi.height= (int)(500*mScaleFactor);
+            roi.width=(int)(500*mScaleFactor);
+
+
+
+            return true;
+        }
+    }
+
+
+
 }

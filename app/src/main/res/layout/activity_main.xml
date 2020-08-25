@@ -52,6 +52,94 @@
                 android:text="Cartoon"
                 android:textColor="#FFFFFF" />
         </RadioGroup>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Contrast"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/contrast_bar"
+                android:max="200"
+                android:progress="100"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Brightness"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/brightness_bar"
+                android:max="200"
+                android:progress="100"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rotate X"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/rotate_x_bar"
+                android:max="50"
+                android:progress="25"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rotate Y"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/rotate_y_bar"
+                android:max="50"
+                android:progress="25"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rotate Z"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/rotate_z_bar"
+                android:max="50"
+                android:progress="25"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Saturation"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/saturation_bar"
+                android:max="200"
+                android:progress="100"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+
+
+
+
+        </LinearLayout>
 
 
 
