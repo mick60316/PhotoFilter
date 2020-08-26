@@ -35,14 +35,15 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
 
     private RadioGroup filerGroup;
-    private SeekBar [] seekBars=new SeekBar[6];
+    private SeekBar [] seekBars=new SeekBar[7];
     private ScaleGestureDetector mScaleGestureDetector;
 
     private static  String MikeTAG ="Mike";
     private ImageView sourceImage;
     private Mat srcImg;
+    private Mat changeImg;
     private Mat processImage;
-    private Mat roiImage;
+    private Mat filerImage;
     private Mat dstImg;
     private Rect roi =new Rect(700,400,500,500);
 
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         Bitmap bitmap =bitmapDrawable.getBitmap();
         Utils.bitmapToMat(bitmap,srcImg);
         processImage =srcImg.clone();
+        changeImg =srcImg.clone();
         //Imgproc.cvtColor(srcImg,srcImg,Imgproc.COLOR_BGR2RGB);
 
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
@@ -118,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         seekBars[3] =findViewById(R.id.rotate_y_bar);
         seekBars[4] =findViewById(R.id.rotate_z_bar);
         seekBars[5] =findViewById(R.id.saturation_bar);
+        seekBars[6] =findViewById(R.id.sharp_bar);
 
         for (int i =0;i<seekBars.length ;i++)
         {
@@ -133,16 +136,19 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
             {
                 case R.id.normal_filter_radio:
                     MikeLog("normal");
-                    updateImageview(roiImage);
+                    filerImage =null;
+                    updateImageview(processImage);
                     break;
                 case R.id.cartoon_filter_radio:
                     MikeLog("cartoon");
-                    updateImageview(ImageProcess.CartoonFilter(roiImage));
+                    filerImage =ImageProcess.CartoonFilter(processImage);
+                    updateImageview(filerImage);
                     //updateImageview(index);
                     break;
                 case R.id.warm_filter_radio:
                     MikeLog("warm");
-                    updateImageview(ImageProcess.WarmFilter(roiImage));
+                    filerImage =ImageProcess.WarmFilter(processImage);
+                    updateImageview(filerImage);
                     break;
                 default:
                     break;
@@ -178,27 +184,36 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
 
             MikeLog("onProgressChanged");
+            if (filerGroup.getCheckedRadioButtonId()!=R.id.normal_filter_radio)
+            {
+                filerGroup.check(R.id.normal_filter_radio);
+                filerImage =null;
+                updateImageview(processImage);
 
+
+            }
             switch(seekBar.getId())
             {
+                case R.id.sharp_bar:
+                    processImage=ImageProcess.sharpImage(changeImg,i);
+                    break;
                 case R.id.brightness_bar:
-                    processImage =ImageProcess.ImageBrightness(srcImg,i-100);
-
+                    processImage =ImageProcess.ImageBrightness(changeImg,i-100);
                     break;
                 case R.id.contrast_bar:
-                    processImage=ImageProcess.ImageContrast(srcImg,i-100);
+                    processImage=ImageProcess.ImageContrast(changeImg,i-100);
                     break;
                 case R.id.rotate_x_bar:
-                    processImage=(ImageProcess.Rotate_X(srcImg,i-25));
+                    processImage=(ImageProcess.Rotate_X(changeImg,i-25));
                     break;
                 case R.id.rotate_y_bar:
-                    processImage=(ImageProcess.Rotate_Y(srcImg,i-25));
+                    processImage=(ImageProcess.Rotate_Y(changeImg,i-25));
                     break;
                 case R.id.rotate_z_bar:
-                    processImage=(ImageProcess.Rotate_XY(srcImg,i-25));
+                    processImage=(ImageProcess.Rotate_XY(changeImg,i-25));
                     break;
                 case R.id.saturation_bar:
-                    processImage=(ImageProcess.HSV(srcImg,i-100));
+                    processImage=(ImageProcess.HSV(changeImg,i-100));
                     break;
 
             }
@@ -218,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-
+            changeImg =processImage;
         }
     }
 
@@ -278,7 +293,8 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
                 case MotionEvent.ACTION_UP:
                     //MikeLog("UPUPUP");
-                    updateImageview(processImage);
+                    if (filerImage ==null) updateImageview(processImage);
+                    else updateImageview(filerImage);
                     break;
 
             }

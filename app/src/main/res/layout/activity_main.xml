@@ -86,6 +86,33 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Saturation"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/saturation_bar"
+                android:max="200"
+                android:progress="100"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sharp"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/sharp_bar"
+                android:max="500"
+                android:progress="0"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Rotate X"
                 android:textColor="#FFFFFFFF"
                 ></TextView>
@@ -122,19 +149,7 @@
                 android:layout_width="900px"
                 android:layout_height="wrap_content">
             </SeekBar>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Saturation"
-                android:textColor="#FFFFFFFF"
-                ></TextView>
-            <SeekBar
-                android:id="@+id/saturation_bar"
-                android:max="200"
-                android:progress="100"
-                android:layout_width="900px"
-                android:layout_height="wrap_content">
-            </SeekBar>
+
 
 
 

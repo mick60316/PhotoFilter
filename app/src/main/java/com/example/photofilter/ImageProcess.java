@@ -175,19 +175,30 @@ public class ImageProcess {
     }
     public static Mat sharpImage (Mat src,int value)
     {
+        //value*=1.5f;
         double sigma = 3;
-        int threshold = 1;
-        float amount = value / 100.0f;
+        int threshold = 2;
+        float amount = value/100.0f;
 
         Mat imgBlurred=new Mat();
         Imgproc.GaussianBlur(src, imgBlurred, new Size(), sigma, sigma);
-        //Mat lowContrastMask  =Core.ab src - imgBlurred;
-//        Mat lowContrastMask = Core.abs(inputImage - imgBlurred) < threshold;
-//        Mat dst = inputImage * (1 + amount) + imgBlurred * (-amount);
-//        inputImage.copyTo(dst, lowContrastMask);
-//        imshow("sharpImage", dst);
+        Mat lowContrastMask  =new Mat ();
+        Core.absdiff(src,imgBlurred,lowContrastMask);
 
-        return new Mat();
+
+        List<Mat> mat_list=new ArrayList<>(3);
+        Core.split(lowContrastMask,mat_list);
+
+        for (int i =0;i<mat_list.size();i++) {
+            Imgproc.threshold(mat_list.get(i),mat_list.get(i),threshold,255,Imgproc.THRESH_BINARY_INV);
+        }
+        Core.merge(mat_list,lowContrastMask);
+        //return lowContrastMask;
+        Mat dst =new Mat();
+        Core.addWeighted(src,1+amount,imgBlurred,-amount,0,dst);
+
+        src.copyTo(dst, lowContrastMask);
+        return dst;
     }
     public static Mat WarmFilter (Mat inputMat)
     {
