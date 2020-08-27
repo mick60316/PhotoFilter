@@ -39,7 +39,7 @@ public class ImageProcess {
     }
 
     public static Mat ImageContrast(Mat src, float _value) {
-        _value/=2.0f;
+        _value/=4.0f;
         float value = 1.0f * (1.8f * _value + 180) / 200 + 0.2f;
 
         Log.e(TAG, "ImageContrast = " + value);
@@ -50,7 +50,7 @@ public class ImageProcess {
     }
 
     public static Mat ImageBrightness(Mat src,int _value) {
-        float value = _value * 2.5f/2.0f;
+        float value = _value * 2.5f/4.0f;
         Log.e(TAG, "ImageBrightness = "+value );
         //Imgproc.cvtColor(mat,mat,Imgproc.COLOR_RGB2GRAY);
         Mat mat1 = Mat.zeros(src.size(), src.type());

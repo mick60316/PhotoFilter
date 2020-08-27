@@ -23,40 +23,53 @@
             android:layout_height="620px">
         </ImageView>
 
-        <RadioGroup
-            android:id="@+id/filer_group"
-            android:layout_marginTop="30px"
-            android:layout_width="1024px"
-            android:layout_height="wrap_content"
-            android:background="#AAAAAA"
-            android:orientation="horizontal"
-            >
-            <RadioButton
-                android:checked="true"
-                android:id="@+id/normal_filter_radio"
-                android:layout_width="300px"
-                android:layout_height="wrap_content"
-                android:text="Normal"
-                android:textColor="#FFFFFF" />
-            <RadioButton
-                android:id="@+id/warm_filter_radio"
-                android:layout_width="300px"
-                android:layout_height="wrap_content"
-                android:text="Warm"
-                android:textColor="#FFFFFF" />
 
-            <RadioButton
-                android:id="@+id/cartoon_filter_radio"
-                android:layout_width="300px"
-                android:layout_height="wrap_content"
-                android:text="Cartoon"
-                android:textColor="#FFFFFF" />
-        </RadioGroup>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rotate X"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/rotate_x_bar"
+                android:max="50"
+                android:progress="25"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rotate Y"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/rotate_y_bar"
+                android:max="50"
+                android:progress="25"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rotate Z"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/rotate_z_bar"
+                android:max="50"
+                android:progress="25"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
+
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -110,45 +123,35 @@
                 android:layout_height="wrap_content">
             </SeekBar>
 
-            <TextView
-                android:layout_width="wrap_content"
+            <RadioGroup
+                android:id="@+id/filer_group"
+                android:layout_marginTop="30px"
+                android:layout_width="1024px"
                 android:layout_height="wrap_content"
-                android:text="Rotate X"
-                android:textColor="#FFFFFFFF"
-                ></TextView>
-            <SeekBar
-                android:id="@+id/rotate_x_bar"
-                android:max="50"
-                android:progress="25"
-                android:layout_width="900px"
-                android:layout_height="wrap_content">
-            </SeekBar>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rotate Y"
-                android:textColor="#FFFFFFFF"
-                ></TextView>
-            <SeekBar
-                android:id="@+id/rotate_y_bar"
-                android:max="50"
-                android:progress="25"
-                android:layout_width="900px"
-                android:layout_height="wrap_content">
-            </SeekBar>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rotate Z"
-                android:textColor="#FFFFFFFF"
-                ></TextView>
-            <SeekBar
-                android:id="@+id/rotate_z_bar"
-                android:max="50"
-                android:progress="25"
-                android:layout_width="900px"
-                android:layout_height="wrap_content">
-            </SeekBar>
+                android:background="#AAAAAA"
+                android:orientation="horizontal"
+                >
+                <RadioButton
+                    android:checked="true"
+                    android:id="@+id/normal_filter_radio"
+                    android:layout_width="300px"
+                    android:layout_height="wrap_content"
+                    android:text="Normal"
+                    android:textColor="#FFFFFF" />
+                <RadioButton
+                    android:id="@+id/warm_filter_radio"
+                    android:layout_width="300px"
+                    android:layout_height="wrap_content"
+                    android:text="Warm"
+                    android:textColor="#FFFFFF" />
+
+                <RadioButton
+                    android:id="@+id/cartoon_filter_radio"
+                    android:layout_width="300px"
+                    android:layout_height="wrap_content"
+                    android:text="Cartoon"
+                    android:textColor="#FFFFFF" />
+            </RadioGroup>
 
 
 

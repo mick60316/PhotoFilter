@@ -40,11 +40,10 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private static  String MikeTAG ="Mike";
     private ImageView sourceImage;
-    private Mat srcImg;
-    private Mat changeImg;
-    private Mat processImage;
-    private Mat filerImage;
-    private Mat dstImg;
+    private Mat srcImg,filerImage,changeImg,processImage;
+    private Mat brightnessMask;
+
+
     private Rect roi =new Rect(700,400,500,500);
 
     private float mScaleFactor = 1.0f;
@@ -81,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
         }
         srcImg=new Mat();
-        dstImg =new Mat();
+
         processImage =new Mat();
         BitmapDrawable bitmapDrawable = (BitmapDrawable) sourceImage.getDrawable();
         Bitmap bitmap =bitmapDrawable.getBitmap();
@@ -203,18 +202,25 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                 case R.id.contrast_bar:
                     processImage=ImageProcess.ImageContrast(changeImg,i-100);
                     break;
-                case R.id.rotate_x_bar:
-                    processImage=(ImageProcess.Rotate_X(changeImg,i-25));
-                    break;
-                case R.id.rotate_y_bar:
-                    processImage=(ImageProcess.Rotate_Y(changeImg,i-25));
-                    break;
-                case R.id.rotate_z_bar:
-                    processImage=(ImageProcess.Rotate_XY(changeImg,i-25));
-                    break;
+
                 case R.id.saturation_bar:
                     processImage=(ImageProcess.HSV(changeImg,i-100));
                     break;
+
+                case R.id.rotate_x_bar:
+                    processImage=(ImageProcess.Rotate_X(changeImg,i-25));
+                    srcImg=(ImageProcess.Rotate_X(changeImg,i-25));
+                    break;
+                case R.id.rotate_y_bar:
+                    processImage=(ImageProcess.Rotate_Y(changeImg,i-25));
+                    srcImg=(ImageProcess.Rotate_Y(changeImg,i-25));
+                    break;
+                case R.id.rotate_z_bar:
+                    processImage=(ImageProcess.Rotate_XY(changeImg,i-25));
+                    srcImg=(ImageProcess.Rotate_XY(changeImg,i-25));
+
+                    break;
+
 
             }
             updateImageview(processImage);
@@ -246,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
-            mScaleGestureDetector.onTouchEvent(motionEvent);
+            //mScaleGestureDetector.onTouchEvent(motionEvent);
 
             int action = motionEvent.getAction() & MotionEvent.ACTION_MASK;
             int pointerIndex = (motionEvent.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
@@ -261,19 +267,10 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
                 case  MotionEvent.ACTION_DOWN:
 
-                    for (int i =0;i<motionEvent.getPointerCount();i++)
-                    {
-                        //MikeLog(" "+motionEvent.getPointerCount());
-
-                    }
-
-
                     pointStartX =motionEvent.getRawX();
                     pointStartY=motionEvent.getRawY();
                     roiStartX =roi.x;
                     roiStartY=roi.y;
-
-
                     //MikeLog("DOWN DOWN");
                     updateImageview(srcImg);
                     break;
@@ -306,10 +303,15 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         @Override
         public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
             mScaleFactor *= scaleGestureDetector.getScaleFactor();
-            mScaleFactor = Math.max(0.1f,
+
+            float newFactor = Math.max(0.1f,
                     Math.min(mScaleFactor, 2.0f));
-            roi.height= (int)(500*mScaleFactor);
-            roi.width=(int)(500*mScaleFactor);
+
+            if (roi.x+500*mScaleFactor <srcImg.width()-10 && roi.y+500*mScaleFactor<srcImg.height()-10) {
+                mScaleFactor = newFactor;
+                roi.height = (int) (500 * mScaleFactor);
+                roi.width = (int) (500 * mScaleFactor);
+            }
 
 
 
