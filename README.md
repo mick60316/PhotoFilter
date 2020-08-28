@@ -24,7 +24,5 @@ cooling filter
 
 user controll (move scale)
 
-combine with Mark's app
-
 圖片線性內插
 
