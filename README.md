@@ -10,13 +10,15 @@ add cartoon filter
 
 add warming filter
 
+### 0828
 
+sharp function
+
+combine with Mark's app
 
 ## TODO:
 
 cooling filter
-
-sharp function
 
 暈映 function
 
