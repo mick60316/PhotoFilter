@@ -17,25 +17,11 @@ import android.widget.SeekBar;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
 import static org.opencv.core.CvType.CV_32F;
-import static org.opencv.core.CvType.CV_64F;
-import static org.opencv.core.CvType.CV_8U;
-import static org.opencv.core.CvType.CV_8UC3;
-import static org.opencv.imgproc.Imgproc.INTER_LANCZOS4;
-import static org.opencv.imgproc.Imgproc.INTER_LINEAR;
 import static org.opencv.imgproc.Imgproc.findContours;
 import static org.opencv.imgproc.Imgproc.warpPerspective;
 import static org.opencv.photo.Photo.edgePreservingFilter;
@@ -53,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private Mat brightnessMask;
 
 
-    private Rect roi =new Rect(0,0,2592,1944);
+    private Rect roi =new Rect(0,0,700,700);
 
     private float mScaleFactor = 1.0f;
 
@@ -61,11 +47,12 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private static PointF touchScreenStopPtArr[] = new PointF[10];
     private static PointF touchScreenCurrPtArr[] = new PointF[10];
 
-    Button bt;
+    private Button defalutButton;
 
-    int xAngle =90;
-    int yAngle =90;
-    int zAngle =90;
+    private int xAngle =90;
+    private int yAngle =90;
+    private int zAngle =90;
+    private int [] seekBarInitValue = new int [seekBars.length];
 
 
     // Used to load the 'native-lib' library on application startup.
@@ -78,18 +65,34 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         linkUserInterface();
-        bt=findViewById(R.id.testbt);
-        bt.setOnClickListener(new View.OnClickListener() {
+        defalutButton =findViewById(R.id.testbt);
+        defalutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                processImage=(RotateImage(srcImg,xAngle,yAngle,zAngle));
-                updateImageview(processImage);
+                setDefault();
+
+
+
             }
         });
         // Example of a call to a native method
 
     }
+    private void setDefault ()
+    {
 
+        for (int i =0;i<seekBars.length ;i++) {
+            seekBars[i].setProgress(seekBarInitValue[i]);
+
+        }
+
+        if (filerGroup.getCheckedRadioButtonId()!=R.id.normal_filter_radio)
+        {
+            filerGroup.check(R.id.normal_filter_radio);
+            filerImage =null;
+            updateImageview(processImage);
+        }
+    }
 
     @Override
     protected void onResume() {
@@ -118,11 +121,12 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         A1.put(0,0,new double[]{1.0,2.0});
         A1.put(0,1,1);
 
-        System.out.println("hhhhhhhhhhhhh"+A1.get(0,1)[0]);
-        mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
+        mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+        ImageProcess.setAngel(srcImg,xAngle,yAngle,zAngle);
       //  roiImage =new Mat(srcImg,roi);
         updateImageview(processImage);
+
 
     }
 
@@ -151,9 +155,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         seekBars[5] =findViewById(R.id.saturation_bar);
         seekBars[6] =findViewById(R.id.sharp_bar);
 
+
         for (int i =0;i<seekBars.length ;i++)
         {
             seekBars[i].setOnSeekBarChangeListener(seekBarListener);
+            seekBarInitValue[i] =seekBars[i].getProgress();
 
         }
         filerGroup.setOnCheckedChangeListener(this);
@@ -192,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private void updateImageview (Mat inputMat)
     {
-        inputMat =new Mat (inputMat,roi);
+        //inputMat =new Mat (inputMat,roi);
         Bitmap newBp =Bitmap.createBitmap(inputMat.width(),inputMat.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(inputMat,newBp);
         sourceImage.setImageBitmap(newBp);
@@ -218,8 +224,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                 filerGroup.check(R.id.normal_filter_radio);
                 filerImage =null;
                 updateImageview(processImage);
-
-
             }
             switch(seekBar.getId())
             {
@@ -309,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     roiStartX =roi.x;
                     roiStartY=roi.y;
                     //MikeLog("DOWN DOWN");
-                    updateImageview(srcImg);
+                    updateImageview(ImageProcess.getRotatedImage());
                     break;
                 case MotionEvent.ACTION_MOVE:
 
@@ -318,11 +322,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
                     int newPosX=(int)(roiStartX-(pointCurrentX-pointStartX));
                     int newPosY =(int)(roiStartY -(pointCurrentY-pointStartY));
-                    if (newPosX >0 && newPosX <srcImg.width()-500*mScaleFactor) roi.x=newPosX;
-                    if (newPosY >0 && newPosY <srcImg.height()-500*mScaleFactor) roi.y=newPosY;
+                    if (newPosX >0 && newPosX <srcImg.width()-700*mScaleFactor) roi.x=newPosX;
+                    if (newPosY >0 && newPosY <srcImg.height()-700*mScaleFactor) roi.y=newPosY;
 
                     MikeLog(" "+(newPosX)+" "+(newPosY)+" "+srcImg.width() +" "+srcImg.height());
-                    updateImageview(srcImg);
+                    updateImageview(ImageProcess.getRotatedImage());
 
                     break;
                 case MotionEvent.ACTION_UP:
@@ -354,116 +358,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
             return true;
         }
-    }
-
-    Mat RotateImage (Mat src,double xAngle,double yAngle,double zAngle)
-    {
-        double dx =0,dy=0,dz=200,f=200.;
-
-        xAngle = (xAngle - 90.)*Math.PI / 180.;
-        yAngle = (yAngle - 90.)*Math.PI / 180.;
-        zAngle = (zAngle - 90.)*Math.PI  / 180.;
-        // get width and height for ease of use in matrices
-        double w = (double)src.cols();
-        double h = (double)src.rows();
-        System.out.println(w +" "+h);
-
-
-        double []A1Data=new double[]{
-                1.,0,-w/2.,
-                0,1.,-h/2.,
-                0,0,0,
-                0,0,1.
-        };
-        double [] RXData =new double[]{
-                1., 0, 0, 0,
-                0, cos(xAngle), -sin(xAngle), 0,
-                0, sin(xAngle), cos(xAngle), 0,
-                0, 0, 0, 1.
-        };
-        double [] RYData =new double[]{
-                cos(yAngle), 0, -sin(yAngle), 0,
-                0, 1., 0, 0,
-                sin(yAngle), 0, cos(yAngle), 0,
-                0, 0, 0, 1.
-
-        };
-        double [] RZData =new double[]{
-                cos(zAngle), -sin(zAngle), 0, 0,
-                sin(zAngle), cos(zAngle), 0, 0,
-                0, 0, 1., 0,
-                0, 0, 0, 1.
-        };
-        double [] TData =new double[]{
-                1., 0, 0, dx,
-                0, 1., 0, dy,
-                0, 0, 1., dz,
-                0, 0, 0, 1.
-        };
-        double [] A2Data=new double[]{
-                f, 0, w / 2., 0,
-                0, f, h / 2., 0,
-                0, 0, 1., 0
-        };
-
-
-        // Projection 2D -> 3D matrix
-        Mat A1=setMatValue(3,4,A1Data);
-        Mat RX =setMatValue(4,4,RXData);
-        Mat RY=setMatValue(4,4,RYData);
-        Mat RZ =setMatValue(4,4,RZData);
-        Mat A2 =setMatValue(4,3,A2Data);
-        Mat T=setMatValue(4,4,TData);
-
-        Mat R=new Mat(new Size (4,4),CV_64F);
-        Mat trans=new Mat();
-        Core.gemm(RY,RZ,1,new Mat(),0,R,0);
-        Core.gemm(RX,R,1,new Mat(),0,R,0);
-
-
-
-
-
-        Core.gemm(R,A1,1,new Mat(),0,trans,0);
-
-
-
-
-        Core.gemm(T,trans,1,new Mat(),0,trans,0);
-
-        Core.gemm(A2,trans,1,new Mat(),0,trans,0);
-        Mat output =new Mat();
-        for (int y=0;y<trans.rows();y++)
-        {
-            for (int x=0;x<trans.cols();x++)
-            {
-                System.out.println("x" +x +" y" +y +" "+trans.get(y,x)[0]);
-
-            }
-
-        }
-
-        warpPerspective(src, output, trans, src.size(),INTER_LINEAR);
-
-
-
-        return output;
-
-    }
-
-    public  Mat setMatValue (int width,int height,double []data )
-    {
-        Mat out=new Mat(new Size(width,height),CV_64F);
-        for (int y=0;y<height;y++)
-        {
-            for (int x=0;x<width;x++)
-            {
-                int index =y*width+x;
-                out.put(y,x,data[index]);
-
-            }
-        }
-        return out;
     }
 
 

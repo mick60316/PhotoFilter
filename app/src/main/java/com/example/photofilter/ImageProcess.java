@@ -38,56 +38,6 @@ public class ImageProcess {
     private static double xAngle,yAngle,zAngle;
     private static Mat rotatedImage;
 
-    
-    private static Mat sharpImage(Mat src, int value) {
-        //value*=1.5f;
-        if (value == INITIAL_SHARP) return src;
-        double sigma = 3;
-        int threshold = 2;
-        float amount = value / 100.0f;
-
-        Mat imgBlurred = new Mat();
-        Imgproc.GaussianBlur(src, imgBlurred, new Size(), sigma, sigma);
-        Mat lowContrastMask = new Mat();
-        Core.absdiff(src, imgBlurred, lowContrastMask);
-
-        List<Mat> mat_list = new ArrayList<>(3);
-        Core.split(lowContrastMask, mat_list);
-
-        for (int i = 0; i < mat_list.size(); i++) {
-            Imgproc.threshold(mat_list.get(i), mat_list.get(i), threshold, 255, Imgproc.THRESH_BINARY_INV);
-        }
-        Core.merge(mat_list, lowContrastMask);
-        //return lowContrastMask;
-        Mat dst = new Mat();
-        Core.addWeighted(src, 1 + amount, imgBlurred, -amount, 0, dst);
-
-        src.copyTo(dst, lowContrastMask);
-        return dst;
-    }
-
-    private static Mat ContrastAndBrightness(Mat _src, float _value1, float _value2) {
-        if (_value1 == INITIAL_CONTRAST && _value2 == INITIAL_BRIGHTNESS) return _src;
-        Mat dst = Mat.zeros(_src.size(), _src.type());
-        _src.convertTo(dst, -1, ContrastValue, BrightnessValue);
-        return dst;
-    }
-
-    private static Mat Saturation(Mat _src, int _value) {
-        if (_value == INITIAL_SATURATION) return _src;
-        Mat hsv = Mat.zeros(_src.size(), _src.type());
-        Imgproc.cvtColor(_src, hsv, Imgproc.COLOR_RGB2HSV);
-        Mat index = hsv.clone();
-        index.setTo(new Scalar(0, Math.abs(SaturationValue), 0));
-        Mat output = new Mat();
-        if (_value >= 0)
-            Core.add(hsv, index, output);
-        else
-            Core.subtract(hsv, index, output);
-        Mat rgb = Mat.zeros(_src.size(), _src.type());
-        Imgproc.cvtColor(output, rgb, Imgproc.COLOR_HSV2RGB);
-        return rgb;
-    }
 
     public static Mat setAngel (Mat _src,double _xAngle,double _yAngle,double _zAngle)
     {
@@ -96,114 +46,11 @@ public class ImageProcess {
         zAngle=_zAngle;
         return ProcessImage(_src);
     }
-
-    static Mat RotateImage (Mat src,double xAngle,double yAngle,double zAngle)
+    public static  Mat getRotatedImage()
     {
-        double dx =0,dy=0,dz=200,f=200.;
-        xAngle = (xAngle - 90.)*Math.PI / 180.;
-        yAngle = (yAngle - 90.)*Math.PI / 180.;
-        zAngle = (zAngle - 90.)*Math.PI  / 180.;
-        // get width and height for ease of use in matrices
-        double w = (double)src.cols();
-        double h = (double)src.rows();
-        System.out.println(w +" "+h);
-
-
-        double []A1Data=new double[]{
-                1.,0,-w/2.,
-                0,1.,-h/2.,
-                0,0,0,
-                0,0,1.
-        };
-        double [] RXData =new double[]{
-                1., 0, 0, 0,
-                0, cos(xAngle), -sin(xAngle), 0,
-                0, sin(xAngle), cos(xAngle), 0,
-                0, 0, 0, 1.
-        };
-        double [] RYData =new double[]{
-                cos(yAngle), 0, -sin(yAngle), 0,
-                0, 1., 0, 0,
-                sin(yAngle), 0, cos(yAngle), 0,
-                0, 0, 0, 1.
-
-        };
-        double [] RZData =new double[]{
-                cos(zAngle), -sin(zAngle), 0, 0,
-                sin(zAngle), cos(zAngle), 0, 0,
-                0, 0, 1., 0,
-                0, 0, 0, 1.
-        };
-        double [] TData =new double[]{
-                1., 0, 0, dx,
-                0, 1., 0, dy,
-                0, 0, 1., dz,
-                0, 0, 0, 1.
-        };
-        double [] A2Data=new double[]{
-                f, 0, w / 2., 0,
-                0, f, h / 2., 0,
-                0, 0, 1., 0
-        };
-
-
-        // Projection 2D -> 3D matrix
-        Mat A1=setMatValue(3,4,A1Data);
-        Mat RX =setMatValue(4,4,RXData);
-        Mat RY=setMatValue(4,4,RYData);
-        Mat RZ =setMatValue(4,4,RZData);
-        Mat A2 =setMatValue(4,3,A2Data);
-        Mat T=setMatValue(4,4,TData);
-
-        Mat R=new Mat(new Size (4,4),CV_64F);
-        Mat trans=new Mat();
-        Core.gemm(RY,RZ,1,new Mat(),0,R,0);
-        Core.gemm(RX,R,1,new Mat(),0,R,0);
-        Core.gemm(R,A1,1,new Mat(),0,trans,0);
-        Core.gemm(T,trans,1,new Mat(),0,trans,0);
-
-        Core.gemm(A2,trans,1,new Mat(),0,trans,0);
-        Mat output =new Mat();
-        for (int y=0;y<trans.rows();y++)
-        {
-            for (int x=0;x<trans.cols();x++)
-            {
-                System.out.println("x" +x +" y" +y +" "+trans.get(y,x)[0]);
-
-            }
-
-        }
-
-        warpPerspective(src, output, trans, src.size(),INTER_LINEAR);
-
-
-
-        return output;
-
+        return rotatedImage;
     }
 
-    private static Mat setMatValue (int width,int height,double []data )
-    {
-        Mat out=new Mat(new Size(width,height),CV_64F);
-        for (int y=0;y<height;y++)
-        {
-            for (int x=0;x<width;x++)
-            {
-                int index =y*width+x;
-                out.put(y,x,data[index]);
-
-            }
-        }
-        return out;
-    }
-    private static Mat ProcessImage(Mat _src) {
-        _src =RotateImage (_src,xAngle,yAngle,zAngle);
-        Mat dst = Mat.zeros(_src.size(), _src.type());
-        _src = Saturation(_src, SaturationValue);
-        _src = sharpImage(_src, sharpValue);
-        dst = ContrastAndBrightness(_src, ContrastValue, BrightnessValue);
-        return dst;
-    }
 
     public static Mat ChangeSaturationValue(Mat _src, int _value) {
         SaturationValue = 2 * _value;
@@ -268,8 +115,6 @@ public class ImageProcess {
 
         Mat lookupTable=new Mat(1, 256, CV_8U);
 
-        //uchar* lut = lookupTable.ptr();
-
         for (int i = 0; i < 256; i++) {
             int j = 0;
             float xval = (float)i;
@@ -285,21 +130,14 @@ public class ImageProcess {
             float constant = redValue[j] - slope * originalValue[j];
 
             lookupTable.put(0,i,slope * xval + constant);
-            //cout << i << " " << slope << " " << constant << " " << lut[i] << endl;
+
         }
-
-
         Mat maxIndex=lab_list.get(2).clone().setTo(new Scalar(255));
         Mat minIndex=lab_list.get(2).clone().setTo(new Scalar(0));
-
-
         Core.LUT(lab_list.get(0),lookupTable,lab_list.get(0));
         Core.min(lab_list.get(0),maxIndex,lab_list.get(0));
         Core.max(lab_list.get(0),minIndex,lab_list.get(0));
-
         Mat lookupTable2=new Mat(1, 256, CV_8U);
-
-
         //Linear Interpolation applied to get values for all the points on X-Axis
         for (int i = 0; i < 256; i++) {
             int j = 0;
@@ -315,16 +153,151 @@ public class ImageProcess {
             float constant = blueValue[j] - slope * originalValue[j];
             lookupTable2.put(0,i,slope * xval + constant);
         }
-
         Core.LUT(lab_list.get(2),lookupTable2,lab_list.get(2));
-
         Core.min(lab_list.get(2),maxIndex,lab_list.get(2));
         Core.min(lab_list.get(2),minIndex,lab_list.get(2));
-
-
         Core.merge(lab_list,result);
         return result;
     }
+
+    private static Mat sharpImage(Mat src, int value) {
+        //value*=1.5f;
+        if (value == INITIAL_SHARP) return src;
+        double sigma = 3;
+        int threshold = 2;
+        float amount = value / 100.0f;
+
+        Mat imgBlurred = new Mat();
+        Imgproc.GaussianBlur(src, imgBlurred, new Size(), sigma, sigma);
+        Mat lowContrastMask = new Mat();
+        Core.absdiff(src, imgBlurred, lowContrastMask);
+
+        List<Mat> mat_list = new ArrayList<>(3);
+        Core.split(lowContrastMask, mat_list);
+
+        for (int i = 0; i < mat_list.size(); i++) {
+            Imgproc.threshold(mat_list.get(i), mat_list.get(i), threshold, 255, Imgproc.THRESH_BINARY_INV);
+        }
+        Core.merge(mat_list, lowContrastMask);
+        //return lowContrastMask;
+        Mat dst = new Mat();
+        Core.addWeighted(src, 1 + amount, imgBlurred, -amount, 0, dst);
+
+        src.copyTo(dst, lowContrastMask);
+        return dst;
+    }
+
+    private static Mat ContrastAndBrightness(Mat _src, float _value1, float _value2) {
+        if (_value1 == INITIAL_CONTRAST && _value2 == INITIAL_BRIGHTNESS) return _src;
+        Mat dst = Mat.zeros(_src.size(), _src.type());
+        _src.convertTo(dst, -1, ContrastValue, BrightnessValue);
+        return dst;
+    }
+
+    private static Mat Saturation(Mat _src, int _value) {
+        if (_value == INITIAL_SATURATION) return _src;
+        Mat hsv = Mat.zeros(_src.size(), _src.type());
+        Imgproc.cvtColor(_src, hsv, Imgproc.COLOR_RGB2HSV);
+        Mat index = hsv.clone();
+        index.setTo(new Scalar(0, Math.abs(SaturationValue), 0));
+        Mat output = new Mat();
+        if (_value >= 0)
+            Core.add(hsv, index, output);
+        else
+            Core.subtract(hsv, index, output);
+        Mat rgb = Mat.zeros(_src.size(), _src.type());
+        Imgproc.cvtColor(output, rgb, Imgproc.COLOR_HSV2RGB);
+        return rgb;
+    }
+
+
+
+    private static Mat RotateImage (Mat src,double xAngle,double yAngle,double zAngle)
+    {
+        double dx =0,dy=0,dz=200,f=200.;
+        xAngle = (xAngle - 90.)*Math.PI / 180.;
+        yAngle = (yAngle - 90.)*Math.PI / 180.;
+        zAngle = (zAngle - 90.)*Math.PI  / 180.;
+        // get width and height for ease of use in matrices
+        double w = (double)src.cols();
+        double h = (double)src.rows();
+
+        double []A1Data=new double[]{
+                1.,0,-w/2.,
+                0,1.,-h/2.,
+                0,0,0,
+                0,0,1.};
+        double [] RXData =new double[]{
+                1., 0, 0, 0,
+                0, cos(xAngle), -sin(xAngle), 0,
+                0, sin(xAngle), cos(xAngle), 0,
+                0, 0, 0, 1.};
+        double [] RYData =new double[]{
+                cos(yAngle), 0, -sin(yAngle), 0,
+                0, 1., 0, 0,
+                sin(yAngle), 0, cos(yAngle), 0,
+                0, 0, 0, 1.};
+        double [] RZData =new double[]{
+                cos(zAngle), -sin(zAngle), 0, 0,
+                sin(zAngle), cos(zAngle), 0, 0,
+                0, 0, 1., 0,
+                0, 0, 0, 1.};
+        double [] TData =new double[]{
+                1., 0, 0, dx,
+                0, 1., 0, dy,
+                0, 0, 1., dz,
+                0, 0, 0, 1.};
+        double [] A2Data=new double[]{
+                f, 0, w / 2., 0,
+                0, f, h / 2., 0,
+                0, 0, 1., 0};
+
+        Mat A1=setMatValue(3,4,A1Data);
+        Mat RX =setMatValue(4,4,RXData);
+        Mat RY=setMatValue(4,4,RYData);
+        Mat RZ =setMatValue(4,4,RZData);
+        Mat A2 =setMatValue(4,3,A2Data);
+        Mat T=setMatValue(4,4,TData);
+
+        Mat R=new Mat(new Size (4,4),CV_64F);
+        Mat trans=new Mat();
+        Core.gemm(RY,RZ,1,new Mat(),0,R,0);
+        Core.gemm(RX,R,1,new Mat(),0,R,0);
+        Core.gemm(R,A1,1,new Mat(),0,trans,0);
+        Core.gemm(T,trans,1,new Mat(),0,trans,0);
+
+        Core.gemm(A2,trans,1,new Mat(),0,trans,0);
+        Mat output =new Mat();
+        warpPerspective(src, output, trans, src.size(),INTER_LINEAR);
+        return output;
+
+    }
+
+    private static Mat setMatValue (int width,int height,double []data )
+    {
+        Mat out=new Mat(new Size(width,height),CV_64F);
+        for (int y=0;y<height;y++)
+        {
+            for (int x=0;x<width;x++)
+            {
+                int index =y*width+x;
+                out.put(y,x,data[index]);
+
+            }
+        }
+        return out;
+    }
+    private static Mat ProcessImage(Mat _src) {
+        _src =RotateImage (_src,xAngle,yAngle,zAngle);
+        rotatedImage =_src.clone();
+        Mat dst = Mat.zeros(_src.size(), _src.type());
+        _src = Saturation(_src, SaturationValue);
+        _src = sharpImage(_src, sharpValue);
+        dst = ContrastAndBrightness(_src, ContrastValue, BrightnessValue);
+        return dst;
+    }
+
+
 
 
 }
