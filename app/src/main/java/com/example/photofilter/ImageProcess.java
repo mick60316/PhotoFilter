@@ -39,38 +39,82 @@ public class ImageProcess {
     private static Mat rotatedImage;
 
 
-    public static Mat setAngel (Mat _src,double _xAngle,double _yAngle,double _zAngle)
+    public static Mat getRotationImage(Mat _src, double _xAngle, double _yAngle, double _zAngle)
     {
+        /*
+            set image rotation
+            argv:
+                _src: input image which have three channel
+                xAngle :angle for x axis
+                yAngle :angle for y axis
+                zAngle :angle for z axis
+             return :
+                a rotated image
+
+        */
         xAngle=_xAngle;
         yAngle=_yAngle;
         zAngle=_zAngle;
         return ProcessImage(_src);
     }
-    public static  Mat getRotatedImage()
+    public static  Mat getOnlyRotatedImage()
     {
+        /*
+        get image which only rotated
+         */
         return rotatedImage;
     }
 
 
-    public static Mat ChangeSaturationValue(Mat _src, int _value) {
+    public static Mat getSaturationImage(Mat _src, int _value) {
+        /*
+         set image saturation
+         Argv:
+            _src : input image which is three channel
+            _value: input saturation value
+         */
         SaturationValue = 2 * _value;
         Log.e(TAG, "Saturation = " + SaturationValue);
         return ProcessImage(_src);
     }
 
-    public static Mat ChangeImageContrastValue(Mat src, float _value) {
+    public static Mat getContrastImage(Mat src, float _value) {
+        /*
+         set image contrast
+         Argv:
+            _src : input image which is three channel
+            _value: input contrast value
+         */
+
+
         ContrastValue = 1.0f * (1.8f * _value + 180) / 200 + 0.2f;
         Log.e(TAG, "ImageContrast = " + ContrastValue);
         return ProcessImage(src);
     }
 
-    public static Mat ChangeImageBrightnessValue(Mat src, int _value) {
+    public static Mat getBrightnessImage(Mat src, int _value) {
+            /*
+         set image brightness
+         Argv:
+            _src : input image which is three channel
+            _value: input brightness value
+         */
+
+
         BrightnessValue = _value * 2.5f;
         Log.e(TAG, "ImageBrightness = " + BrightnessValue);
         return ProcessImage(src);
     }
 
-    public static Mat ChangeSharpValue(Mat _src, int value) {
+    public static Mat getSharpImage(Mat _src, int value) {
+
+        /*
+         set image sharp
+         Argv:
+            _src : input image which is three channel
+            _value: input sharp value
+         */
+
         sharpValue = value;
         return ProcessImage(_src);
     }
@@ -80,7 +124,14 @@ public class ImageProcess {
 
     public static Mat CartoonFilter (Mat src)
     {
+        /*
+        Argv:
+            inputMat: A three channel image
 
+        return:
+            a three channel image after cartoon filer
+
+        */
         Mat img=src.clone();
         Imgproc.cvtColor(img,img,Imgproc.COLOR_BGRA2BGR);
         Mat imgGray=new Mat();
@@ -104,7 +155,14 @@ public class ImageProcess {
 
     public static Mat WarmFilter (Mat inputMat)
     {
+        /*
+        Argv:
+            inputMat: A three channel image
 
+        return:
+            a three channel image after warm filer
+
+        */
         float [] originalValue =new  float[] { 0,50,100,150,200,255 };
         //Changed points on Y-axis for red and blue channels
         float [] redValue = new float []{ 0,80,150,190,220,255 };

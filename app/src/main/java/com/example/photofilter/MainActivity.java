@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private static  String MikeTAG ="Mike";
     private ImageView sourceImage;
-    private Mat srcImg,filerImage,changeImg,processImage;
+    private Mat srcImg,filerImage,processImage;
     private Mat brightnessMask;
 
 
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         Bitmap bitmap =bitmapDrawable.getBitmap();
         Utils.bitmapToMat(bitmap,srcImg);
         processImage =srcImg.clone();
-        changeImg =srcImg.clone();
+
         //Imgproc.cvtColor(srcImg,srcImg,Imgproc.COLOR_BGR2RGB);
         Mat A1=new Mat(new Size(4,3),CV_32F);
         A1.put(0,0,new double[]{1.0,2.0});
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
 
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
-        ImageProcess.setAngel(srcImg,xAngle,yAngle,zAngle);
+        ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle);
       //  roiImage =new Mat(srcImg,roi);
         updateImageview(processImage);
 
@@ -228,36 +228,36 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
             switch(seekBar.getId())
             {
                 case R.id.sharp_bar:
-                    processImage=ImageProcess.ChangeSharpValue(srcImg,i);
-                    //processImage=ImageProcess.sharpImage(changeImg,i);
+                    processImage=ImageProcess.getSharpImage(srcImg,i);
+
                     break;
                 case R.id.brightness_bar:
-                    processImage=ImageProcess.ChangeImageBrightnessValue(srcImg,i-100);
-                    //processImage =ImageProcess.ImageBrightness(changeImg,i-100);
+                    processImage=ImageProcess.getBrightnessImage(srcImg,i-100);
+
                     break;
                 case R.id.contrast_bar:
-                    processImage=ImageProcess.ChangeImageContrastValue(srcImg,i-100);
-                    //processImage=ImageProcess.ImageContrast(changeImg,i-100);
+                    processImage=ImageProcess.getContrastImage(srcImg,i-100);
+
                     break;
 
                 case R.id.saturation_bar:
-                    processImage=(ImageProcess.ChangeSaturationValue(srcImg,i-100));
+                    processImage=(ImageProcess.getSaturationImage(srcImg,i-100));
                     break;
 
                 case R.id.rotate_x_bar:
                     xAngle=90+i-25;
-                    processImage=(ImageProcess.setAngel(srcImg,xAngle,yAngle,zAngle));
-                   // srcImg=(ImageProcess.Rotate_X(changeImg,i-25));
+                    processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+
                     break;
                 case R.id.rotate_y_bar:
                     yAngle=90+i-25;
-                    processImage=(ImageProcess.setAngel(srcImg,xAngle,yAngle,zAngle));
-                    //srcImg=(ImageProcess.Rotate_Y(changeImg,i-25));
+                    processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+
                     break;
                 case R.id.rotate_z_bar:
                     zAngle=90+i;
-                    processImage=(ImageProcess.setAngel(srcImg,xAngle,yAngle,zAngle));
-                    //srcImg=(ImageProcess.Rotate_XY(changeImg,i-25));
+                    processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+
 
                     break;
 
@@ -271,16 +271,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
 
-           // processImage =dstImg;
-//            BitmapDrawable bitmapDrawable = (BitmapDrawable) sourceImage.getDrawable();
-//            Bitmap bitmap =bitmapDrawable.getBitmap();
-//            Utils.bitmapToMat(bitmap,srcImg);
-            //srcImg =processImage;
         }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            changeImg =processImage;
+
         }
     }
 
@@ -313,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     roiStartX =roi.x;
                     roiStartY=roi.y;
                     //MikeLog("DOWN DOWN");
-                    updateImageview(ImageProcess.getRotatedImage());
+                    updateImageview(ImageProcess.getOnlyRotatedImage());
                     break;
                 case MotionEvent.ACTION_MOVE:
 
@@ -326,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     if (newPosY >0 && newPosY <srcImg.height()-700*mScaleFactor) roi.y=newPosY;
 
                     MikeLog(" "+(newPosX)+" "+(newPosY)+" "+srcImg.width() +" "+srcImg.height());
-                    updateImageview(ImageProcess.getRotatedImage());
+                    updateImageview(ImageProcess.getOnlyRotatedImage());
 
                     break;
                 case MotionEvent.ACTION_UP:
