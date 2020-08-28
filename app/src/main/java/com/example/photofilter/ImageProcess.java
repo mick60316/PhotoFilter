@@ -15,22 +15,73 @@ import org.opencv.utils.Converters;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static org.opencv.core.CvType.CV_32F;
+import static org.opencv.core.CvType.CV_64F;
 import static org.opencv.core.CvType.CV_8U;
 import static org.opencv.core.CvType.CV_8UC3;
+import static org.opencv.imgproc.Imgproc.INTER_LANCZOS4;
+import static org.opencv.imgproc.Imgproc.INTER_LINEAR;
+import static org.opencv.imgproc.Imgproc.warpPerspective;
 
 public class ImageProcess {
-    private static final String TAG = "MarkImageProcess";
+    private static final String TAG = "MarkImageProcess1";
+    private static final float INITIAL_CONTRAST = 1.0f;
+    private static final float INITIAL_BRIGHTNESS = 0.0f;
+    private static final int INITIAL_SATURATION = 0;
+    private static final int INITIAL_SHARP = 0;
+    private static float ContrastValue = INITIAL_CONTRAST;
+    private static float BrightnessValue = INITIAL_BRIGHTNESS;
+    private static int SaturationValue = INITIAL_SATURATION;
+    private static int sharpValue = INITIAL_SHARP;
+    private static double xAngle,yAngle,zAngle;
+    private static Mat rotatedImage;
 
-    public static Mat HSV(Mat _src, int _value) {
+    
+    private static Mat sharpImage(Mat src, int value) {
+        //value*=1.5f;
+        if (value == INITIAL_SHARP) return src;
+        double sigma = 3;
+        int threshold = 2;
+        float amount = value / 100.0f;
 
-        float value = _value;
+        Mat imgBlurred = new Mat();
+        Imgproc.GaussianBlur(src, imgBlurred, new Size(), sigma, sigma);
+        Mat lowContrastMask = new Mat();
+        Core.absdiff(src, imgBlurred, lowContrastMask);
+
+        List<Mat> mat_list = new ArrayList<>(3);
+        Core.split(lowContrastMask, mat_list);
+
+        for (int i = 0; i < mat_list.size(); i++) {
+            Imgproc.threshold(mat_list.get(i), mat_list.get(i), threshold, 255, Imgproc.THRESH_BINARY_INV);
+        }
+        Core.merge(mat_list, lowContrastMask);
+        //return lowContrastMask;
+        Mat dst = new Mat();
+        Core.addWeighted(src, 1 + amount, imgBlurred, -amount, 0, dst);
+
+        src.copyTo(dst, lowContrastMask);
+        return dst;
+    }
+
+    private static Mat ContrastAndBrightness(Mat _src, float _value1, float _value2) {
+        if (_value1 == INITIAL_CONTRAST && _value2 == INITIAL_BRIGHTNESS) return _src;
+        Mat dst = Mat.zeros(_src.size(), _src.type());
+        _src.convertTo(dst, -1, ContrastValue, BrightnessValue);
+        return dst;
+    }
+
+    private static Mat Saturation(Mat _src, int _value) {
+        if (_value == INITIAL_SATURATION) return _src;
         Mat hsv = Mat.zeros(_src.size(), _src.type());
         Imgproc.cvtColor(_src, hsv, Imgproc.COLOR_RGB2HSV);
         Mat index = hsv.clone();
-        index.setTo(new Scalar(0, Math.abs(value), 0));
+        index.setTo(new Scalar(0, Math.abs(SaturationValue), 0));
         Mat output = new Mat();
-        if(_value>=0)
-            Core.add(hsv,index,output);
+        if (_value >= 0)
+            Core.add(hsv, index, output);
         else
             Core.subtract(hsv, index, output);
         Mat rgb = Mat.zeros(_src.size(), _src.type());
@@ -38,117 +89,147 @@ public class ImageProcess {
         return rgb;
     }
 
-    public static Mat ImageContrast(Mat src, float _value) {
-        _value/=4.0f;
-        float value = 1.0f * (1.8f * _value + 180) / 200 + 0.2f;
-
-        Log.e(TAG, "ImageContrast = " + value);
-        //Imgproc.cvtColor(mat,mat,Imgproc.COLOR_RGB2GRAY);
-        Mat mat1 = Mat.zeros(src.size(), src.type());
-        src.convertTo(mat1, -1, value, 1);
-        return mat1;
+    public static Mat setAngel (Mat _src,double _xAngle,double _yAngle,double _zAngle)
+    {
+        xAngle=_xAngle;
+        yAngle=_yAngle;
+        zAngle=_zAngle;
+        return ProcessImage(_src);
     }
 
-    public static Mat ImageBrightness(Mat src,int _value) {
-        float value = _value * 2.5f/4.0f;
-        Log.e(TAG, "ImageBrightness = "+value );
-        //Imgproc.cvtColor(mat,mat,Imgproc.COLOR_RGB2GRAY);
-        Mat mat1 = Mat.zeros(src.size(), src.type());
-        src.convertTo(mat1, -1, 1, value);
-        return mat1;
-    }
+    static Mat RotateImage (Mat src,double xAngle,double yAngle,double zAngle)
+    {
+        double dx =0,dy=0,dz=200,f=200.;
+        xAngle = (xAngle - 90.)*Math.PI / 180.;
+        yAngle = (yAngle - 90.)*Math.PI / 180.;
+        zAngle = (zAngle - 90.)*Math.PI  / 180.;
+        // get width and height for ease of use in matrices
+        double w = (double)src.cols();
+        double h = (double)src.rows();
+        System.out.println(w +" "+h);
 
-    public static Mat Rotate_X(Mat src,int _value) {
-        float value = 1.0f * _value;
-        Mat dst = new Mat();
-        Mat perspectiveMmat;
-        float xMargin, yMargin;
-        int x0 = 0;
-        int x1 = src.cols();
-        int y0 = 0;
-        int y1 = src.rows();
-        List<Point> listSrcs = java.util.Arrays.asList(new Point(x0, y0), new Point(x0, y1), new Point(x1, y1), new Point(x1, y0));
-        Mat srcPoints = Converters.vector_Point_to_Mat(listSrcs, CvType.CV_32F);
 
-        float parameter_x = (Math.abs(value) - 1) / 24 * (20 - (src.cols() / 6)) + (src.cols() / 6);
-        float parameter_y = (Math.abs(value) - 1) / 24 * (20 - (src.rows() / 6)) + (src.rows() / 6);
-        xMargin = src.cols() / parameter_x;
-        yMargin = src.rows() / parameter_y;
+        double []A1Data=new double[]{
+                1.,0,-w/2.,
+                0,1.,-h/2.,
+                0,0,0,
+                0,0,1.
+        };
+        double [] RXData =new double[]{
+                1., 0, 0, 0,
+                0, cos(xAngle), -sin(xAngle), 0,
+                0, sin(xAngle), cos(xAngle), 0,
+                0, 0, 0, 1.
+        };
+        double [] RYData =new double[]{
+                cos(yAngle), 0, -sin(yAngle), 0,
+                0, 1., 0, 0,
+                sin(yAngle), 0, cos(yAngle), 0,
+                0, 0, 0, 1.
 
-        if (value >= 1) {
-            List<Point> listDsts = java.util.Arrays.asList(new Point(x0 + xMargin, y0 + yMargin),
-                    listSrcs.get(1), listSrcs.get(2), new Point(x1 - xMargin, y0 + yMargin));
-            Mat dstPoints = Converters.vector_Point_to_Mat(listDsts, CvType.CV_32F);
-            perspectiveMmat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
-        } else if (value <= -1) {
-            List<Point> listDsts = java.util.Arrays.asList(listSrcs.get(0),
-                    new Point(x0 + xMargin, y1 - yMargin),
-                    new Point(x1 - xMargin, y1 - yMargin),
-                    listSrcs.get(3));
-            Mat dstPoints = Converters.vector_Point_to_Mat(listDsts, CvType.CV_32F);
-            perspectiveMmat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
-        } else {
-            List<Point> listDsts = java.util.Arrays.asList(listSrcs.get(0), listSrcs.get(1), listSrcs.get(2), listSrcs.get(3));
+        };
+        double [] RZData =new double[]{
+                cos(zAngle), -sin(zAngle), 0, 0,
+                sin(zAngle), cos(zAngle), 0, 0,
+                0, 0, 1., 0,
+                0, 0, 0, 1.
+        };
+        double [] TData =new double[]{
+                1., 0, 0, dx,
+                0, 1., 0, dy,
+                0, 0, 1., dz,
+                0, 0, 0, 1.
+        };
+        double [] A2Data=new double[]{
+                f, 0, w / 2., 0,
+                0, f, h / 2., 0,
+                0, 0, 1., 0
+        };
 
-            Mat dstPoints = Converters.vector_Point_to_Mat(listDsts, CvType.CV_32F);
 
-            perspectiveMmat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
+        // Projection 2D -> 3D matrix
+        Mat A1=setMatValue(3,4,A1Data);
+        Mat RX =setMatValue(4,4,RXData);
+        Mat RY=setMatValue(4,4,RYData);
+        Mat RZ =setMatValue(4,4,RZData);
+        Mat A2 =setMatValue(4,3,A2Data);
+        Mat T=setMatValue(4,4,TData);
+
+        Mat R=new Mat(new Size (4,4),CV_64F);
+        Mat trans=new Mat();
+        Core.gemm(RY,RZ,1,new Mat(),0,R,0);
+        Core.gemm(RX,R,1,new Mat(),0,R,0);
+        Core.gemm(R,A1,1,new Mat(),0,trans,0);
+        Core.gemm(T,trans,1,new Mat(),0,trans,0);
+
+        Core.gemm(A2,trans,1,new Mat(),0,trans,0);
+        Mat output =new Mat();
+        for (int y=0;y<trans.rows();y++)
+        {
+            for (int x=0;x<trans.cols();x++)
+            {
+                System.out.println("x" +x +" y" +y +" "+trans.get(y,x)[0]);
+
+            }
+
         }
-        Imgproc.warpPerspective(src, dst, perspectiveMmat, src.size(), Imgproc.INTER_LINEAR);
 
-        return dst;
+        warpPerspective(src, output, trans, src.size(),INTER_LINEAR);
+
+
+
+        return output;
+
     }
 
-    public static Mat Rotate_Y(Mat src, int _value) {
-        float value = 1.0f * _value;
-        Mat dst = new Mat();
-        Mat perspectiveMmat;
-        float xMargin, yMargin;
-        int x0 = 0;
-        int x1 = src.cols();
-        int y0 = 0;
-        int y1 = src.rows();
-        List<Point> listSrcs = java.util.Arrays.asList(new Point(x0, y0), new Point(x0, y1), new Point(x1, y1), new Point(x1, y0));
-        Mat srcPoints = Converters.vector_Point_to_Mat(listSrcs, CvType.CV_32F);
+    private static Mat setMatValue (int width,int height,double []data )
+    {
+        Mat out=new Mat(new Size(width,height),CV_64F);
+        for (int y=0;y<height;y++)
+        {
+            for (int x=0;x<width;x++)
+            {
+                int index =y*width+x;
+                out.put(y,x,data[index]);
 
-        float parameter_x = (Math.abs(value) - 1) / 24 * (20 - (src.cols() / 6)) + (src.cols() / 6);
-        float parameter_y = (Math.abs(value) - 1) / 24 * (20 - (src.rows() / 6)) + (src.rows() / 6);
-        xMargin = src.cols() / parameter_x;
-        yMargin = src.rows() / parameter_y;
-        if (value >= 1) {
-            List<Point> listDsts = java.util.Arrays.asList(listSrcs.get(0), listSrcs.get(1),
-                    new Point(x1 - xMargin, y1 - yMargin),
-                    new Point(x1 - xMargin, y0 + yMargin));
-
-            Mat dstPoints = Converters.vector_Point_to_Mat(listDsts, CvType.CV_32F);
-            perspectiveMmat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
-        } else if (value <= -1) {
-
-            List<Point> listDsts = java.util.Arrays.asList(new Point(x0 + xMargin, y0 + yMargin),
-                    new Point(x0 + xMargin, y1 - yMargin), listSrcs.get(2), listSrcs.get(3));
-
-            Mat dstPoints = Converters.vector_Point_to_Mat(listDsts, CvType.CV_32F);
-            perspectiveMmat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
-        } else {
-            List<Point> listDsts = java.util.Arrays.asList(listSrcs.get(0), listSrcs.get(1),
-                    listSrcs.get(2), listSrcs.get(3));
-
-            Mat dstPoints = Converters.vector_Point_to_Mat(listDsts, CvType.CV_32F);
-            perspectiveMmat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
+            }
         }
-        Imgproc.warpPerspective(src, dst, perspectiveMmat, src.size(), Imgproc.INTER_LINEAR);
+        return out;
+    }
+    private static Mat ProcessImage(Mat _src) {
+        _src =RotateImage (_src,xAngle,yAngle,zAngle);
+        Mat dst = Mat.zeros(_src.size(), _src.type());
+        _src = Saturation(_src, SaturationValue);
+        _src = sharpImage(_src, sharpValue);
+        dst = ContrastAndBrightness(_src, ContrastValue, BrightnessValue);
         return dst;
     }
 
-    public static Mat Rotate_XY(Mat src,int _value) {
-        float value = 1.0f * _value;
-        Mat dst = new Mat();
-        Point center = new Point(src.width() / 2.0, src.height() / 2.0);
-        float scale = value != 0 ? 1.5f : 1;
-        Mat affineTrans = Imgproc.getRotationMatrix2D(center, value, 1);
-        Imgproc.warpAffine(src, dst, affineTrans, src.size(), Imgproc.INTER_NEAREST);
-        return dst;
+    public static Mat ChangeSaturationValue(Mat _src, int _value) {
+        SaturationValue = 2 * _value;
+        Log.e(TAG, "Saturation = " + SaturationValue);
+        return ProcessImage(_src);
     }
+
+    public static Mat ChangeImageContrastValue(Mat src, float _value) {
+        ContrastValue = 1.0f * (1.8f * _value + 180) / 200 + 0.2f;
+        Log.e(TAG, "ImageContrast = " + ContrastValue);
+        return ProcessImage(src);
+    }
+
+    public static Mat ChangeImageBrightnessValue(Mat src, int _value) {
+        BrightnessValue = _value * 2.5f;
+        Log.e(TAG, "ImageBrightness = " + BrightnessValue);
+        return ProcessImage(src);
+    }
+
+    public static Mat ChangeSharpValue(Mat _src, int value) {
+        sharpValue = value;
+        return ProcessImage(_src);
+    }
+
+
+
 
     public static Mat CartoonFilter (Mat src)
     {
@@ -173,33 +254,7 @@ public class ImageProcess {
         Core.bitwise_and(out,out,output,edge_Mask);
         return output;
     }
-    public static Mat sharpImage (Mat src,int value)
-    {
-        //value*=1.5f;
-        double sigma = 3;
-        int threshold = 2;
-        float amount = value/100.0f;
 
-        Mat imgBlurred=new Mat();
-        Imgproc.GaussianBlur(src, imgBlurred, new Size(), sigma, sigma);
-        Mat lowContrastMask  =new Mat ();
-        Core.absdiff(src,imgBlurred,lowContrastMask);
-
-
-        List<Mat> mat_list=new ArrayList<>(3);
-        Core.split(lowContrastMask,mat_list);
-
-        for (int i =0;i<mat_list.size();i++) {
-            Imgproc.threshold(mat_list.get(i),mat_list.get(i),threshold,255,Imgproc.THRESH_BINARY_INV);
-        }
-        Core.merge(mat_list,lowContrastMask);
-        //return lowContrastMask;
-        Mat dst =new Mat();
-        Core.addWeighted(src,1+amount,imgBlurred,-amount,0,dst);
-
-        src.copyTo(dst, lowContrastMask);
-        return dst;
-    }
     public static Mat WarmFilter (Mat inputMat)
     {
 
@@ -266,13 +321,9 @@ public class ImageProcess {
         Core.min(lab_list.get(2),maxIndex,lab_list.get(2));
         Core.min(lab_list.get(2),minIndex,lab_list.get(2));
 
-        //Merge the channels
+
         Core.merge(lab_list,result);
         return result;
-        //merge(channels, result);
-
-
-
     }
 
 
