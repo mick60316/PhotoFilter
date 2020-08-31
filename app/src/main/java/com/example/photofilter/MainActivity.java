@@ -65,16 +65,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         linkUserInterface();
-        defalutButton =findViewById(R.id.testbt);
-        defalutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setDefault();
 
-
-
-            }
-        });
         // Example of a call to a native method
 
     }
@@ -163,6 +154,16 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
         }
         filerGroup.setOnCheckedChangeListener(this);
+
+        defalutButton =findViewById(R.id.testbt);
+        defalutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setDefault();
+            }
+        });
+
+
     }
 
     @Override
@@ -245,22 +246,19 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
 
                 case R.id.rotate_x_bar:
-                    xAngle=90+i-25;
+                    xAngle=90+i-12;
                     processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
 
                     break;
                 case R.id.rotate_y_bar:
-                    yAngle=90+i-25;
+                    yAngle=90+i-12;
                     processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
 
                     break;
                 case R.id.rotate_z_bar:
                     zAngle=90+i;
                     processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
-
-
                     break;
-
 
             }
             updateImageview(processImage);

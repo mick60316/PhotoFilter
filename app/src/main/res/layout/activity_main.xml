@@ -27,8 +27,14 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
+            android:orientation="vertical">
+
+
+            <Button
+                android:text="OK"
+                android:layout_height="100px"
+                android:layout_width="200px">
+            </Button>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -37,8 +43,8 @@
                 ></TextView>
             <SeekBar
                 android:id="@+id/rotate_x_bar"
-                android:max="50"
-                android:progress="25"
+                android:max="24"
+                android:progress="12"
                 android:layout_width="900px"
                 android:layout_height="wrap_content">
             </SeekBar>
@@ -50,8 +56,8 @@
                 ></TextView>
             <SeekBar
                 android:id="@+id/rotate_y_bar"
-                android:max="50"
-                android:progress="25"
+                android:max="24"
+                android:progress="12"
                 android:layout_width="900px"
                 android:layout_height="wrap_content">
             </SeekBar>
@@ -154,8 +160,9 @@
             </RadioGroup>
             <Button
                 android:id="@+id/testbt"
-                android:layout_width="200px"
+                android:layout_width="300px"
                 android:layout_height="150px"
+                android:text="default"
                 ></Button>
 
 
