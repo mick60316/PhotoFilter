@@ -29,15 +29,21 @@ import static org.opencv.photo.Photo.edgePreservingFilter;
 public class MainActivity extends AppCompatActivity implements RadioGroup.OnCheckedChangeListener {
 
 
+
+    private static final int ROI_MODE =0;
+    private static final int ADJUST_MODE =1;
+
+    private int currentMode =0;
+
+
     private RadioGroup filerGroup;
     private SeekBar [] seekBars=new SeekBar[7];
     private ScaleGestureDetector mScaleGestureDetector;
 
     private static  String MikeTAG ="Mike";
     private ImageView sourceImage;
-    private Mat srcImg,filerImage,processImage;
+    private Mat srcImg,srcImgClone,filerImage,processImage;
     private Mat brightnessMask;
-
 
     private Rect roi =new Rect(0,0,700,700);
 
@@ -47,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private static PointF touchScreenStopPtArr[] = new PointF[10];
     private static PointF touchScreenCurrPtArr[] = new PointF[10];
 
-    private Button defalutButton;
+    private Button defalutButton,roiOkButton;
 
     private int xAngle =90;
     private int yAngle =90;
@@ -72,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private void setDefault ()
     {
 
+
         for (int i =0;i<seekBars.length ;i++) {
             seekBars[i].setProgress(seekBarInitValue[i]);
 
@@ -80,9 +87,14 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         if (filerGroup.getCheckedRadioButtonId()!=R.id.normal_filter_radio)
         {
             filerGroup.check(R.id.normal_filter_radio);
-            filerImage =null;
-            updateImageview(processImage);
+           // updateImageview(processImage);
         }
+
+        currentMode = ROI_MODE;
+        updateImageview(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+
+
+
     }
 
     @Override
@@ -155,11 +167,20 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         }
         filerGroup.setOnCheckedChangeListener(this);
 
-        defalutButton =findViewById(R.id.testbt);
+        defalutButton =findViewById(R.id.default_button);
         defalutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setDefault();
+            }
+        });
+        roiOkButton=findViewById(R.id.roi_ok_button);
+        roiOkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                srcImgClone=new Mat (srcImg,roi).clone();
+                currentMode =ADJUST_MODE;
+                updateImageview(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
             }
         });
 
@@ -168,6 +189,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int i) {
+            if (processImage ==null)return ;
             switch (i)
             {
                 case R.id.normal_filter_radio:
@@ -183,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
                 case R.id.warm_filter_radio:
                     MikeLog("warm");
+
                     filerImage =ImageProcess.WarmFilter(processImage);
                     updateImageview(filerImage);
                     break;
@@ -199,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private void updateImageview (Mat inputMat)
     {
-        //inputMat =new Mat (inputMat,roi);
+        if (currentMode ==ROI_MODE) inputMat =new Mat (inputMat,roi);
         Bitmap newBp =Bitmap.createBitmap(inputMat.width(),inputMat.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(inputMat,newBp);
         sourceImage.setImageBitmap(newBp);
@@ -229,41 +252,39 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
             switch(seekBar.getId())
             {
                 case R.id.sharp_bar:
-                    processImage=ImageProcess.getSharpImage(srcImg,i);
+                    processImage=ImageProcess.getSharpImage(srcImgClone,i);
 
                     break;
                 case R.id.brightness_bar:
-                    processImage=ImageProcess.getBrightnessImage(srcImg,i-100);
+                    processImage=ImageProcess.getBrightnessImage(srcImgClone,i-100);
 
                     break;
                 case R.id.contrast_bar:
-                    processImage=ImageProcess.getContrastImage(srcImg,i-100);
+                    processImage=ImageProcess.getContrastImage(srcImgClone,i-100);
 
                     break;
 
                 case R.id.saturation_bar:
-                    processImage=(ImageProcess.getSaturationImage(srcImg,i-100));
+                    processImage=(ImageProcess.getSaturationImage(srcImgClone,i-100));
                     break;
 
                 case R.id.rotate_x_bar:
                     xAngle=90+i-12;
-                    processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
 
                     break;
                 case R.id.rotate_y_bar:
                     yAngle=90+i-12;
-                    processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
 
                     break;
                 case R.id.rotate_z_bar:
                     zAngle=90+i;
-                    processImage=(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
                     break;
 
             }
             updateImageview(processImage);
-
-
         }
 
         @Override
@@ -315,8 +336,8 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
                     int newPosX=(int)(roiStartX-(pointCurrentX-pointStartX));
                     int newPosY =(int)(roiStartY -(pointCurrentY-pointStartY));
-                    if (newPosX >0 && newPosX <srcImg.width()-700*mScaleFactor) roi.x=newPosX;
-                    if (newPosY >0 && newPosY <srcImg.height()-700*mScaleFactor) roi.y=newPosY;
+                    if (newPosX >=0 && newPosX <srcImg.width()-700*mScaleFactor) roi.x=newPosX;
+                    if (newPosY >=0 && newPosY <srcImg.height()-700*mScaleFactor) roi.y=newPosY;
 
                     MikeLog(" "+(newPosX)+" "+(newPosY)+" "+srcImg.width() +" "+srcImg.height());
                     updateImageview(ImageProcess.getOnlyRotatedImage());
@@ -324,7 +345,9 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
                 case MotionEvent.ACTION_UP:
                     //MikeLog("UPUPUP");
-                    if (filerImage ==null) updateImageview(processImage);
+                    if (filerImage ==null) {
+                     //   updateImageview(processImage);
+                    }
                     else updateImageview(filerImage);
                     break;
 
@@ -346,12 +369,12 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                 roi.height = (int) (500 * mScaleFactor);
                 roi.width = (int) (500 * mScaleFactor);
             }
-
-
-
             return true;
         }
     }
+
+
+    
 
 
 }

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#000000"
     tools:context=".MainActivity">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="28px"
@@ -18,23 +18,24 @@
         <ImageView
             android:id="@+id/src_imageview"
             android:src="@drawable/img"
-
             android:layout_width="1024px"
             android:layout_height="620px">
         </ImageView>
 
-
+        <Button
+            android:id="@+id/roi_ok_button"
+            android:text="Lock"
+            android:layout_marginTop="670px"
+            android:layout_height="100px"
+            android:layout_width="200px">
+        </Button>
         <LinearLayout
+            android:id="@+id/adjust_layout"
+            android:visibility="invisible"
+            android:layout_marginTop="800px"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-
-            <Button
-                android:text="OK"
-                android:layout_height="100px"
-                android:layout_width="200px">
-            </Button>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -128,7 +129,20 @@
                 android:layout_width="900px"
                 android:layout_height="wrap_content">
             </SeekBar>
+            <Button
+                android:id="@+id/adjust_finish_button"
+                android:text="Finish"
+                android:layout_width="300px"
+                android:layout_height="150px">
+            </Button>
 
+        </LinearLayout>
+        <RelativeLayout
+            android:id="@+id/filter_layout"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_marginTop="800px"
+            android:layout_height="match_parent">
             <RadioGroup
                 android:id="@+id/filer_group"
                 android:layout_marginTop="30px"
@@ -158,22 +172,19 @@
                     android:text="Cartoon"
                     android:textColor="#FFFFFF" />
             </RadioGroup>
-            <Button
-                android:id="@+id/testbt"
-                android:layout_width="300px"
-                android:layout_height="150px"
-                android:text="default"
-                ></Button>
+        </RelativeLayout>
+        <Button
+            android:id="@+id/default_button"
+            android:layout_width="300px"
+            android:layout_height="150px"
+            android:text="default"
+            android:layout_marginTop="1800px"
+            ></Button>
 
 
 
+    </RelativeLayout>
 
-
-        </LinearLayout>
-
-
-
-    </LinearLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
