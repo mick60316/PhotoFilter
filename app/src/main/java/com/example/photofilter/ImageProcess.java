@@ -17,12 +17,19 @@ import java.util.List;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
+import static org.opencv.core.Core.LUT;
+import static org.opencv.core.Core.merge;
 import static org.opencv.core.CvType.CV_32F;
 import static org.opencv.core.CvType.CV_64F;
 import static org.opencv.core.CvType.CV_8U;
 import static org.opencv.core.CvType.CV_8UC3;
+import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
+import static org.opencv.imgproc.Imgproc.COLOR_BGR2Lab;
+import static org.opencv.imgproc.Imgproc.COLOR_HSV2BGR;
+import static org.opencv.imgproc.Imgproc.COLOR_Lab2BGR;
 import static org.opencv.imgproc.Imgproc.INTER_LANCZOS4;
 import static org.opencv.imgproc.Imgproc.INTER_LINEAR;
+import static org.opencv.imgproc.Imgproc.cvtColor;
 import static org.opencv.imgproc.Imgproc.warpPerspective;
 
 public class ImageProcess {
@@ -36,10 +43,11 @@ public class ImageProcess {
     private static int SaturationValue = INITIAL_SATURATION;
     private static int sharpValue = INITIAL_SHARP;
     private static double xAngle,yAngle,zAngle;
+    private static double distance;
     private static Mat rotatedImage;
 
 
-    public static Mat getRotationImage(Mat _src, double _xAngle, double _yAngle, double _zAngle)
+    public static Mat getRotationImage(Mat _src, double _xAngle, double _yAngle, double _zAngle,double dz)
     {
         /*
             set image rotation
@@ -55,6 +63,7 @@ public class ImageProcess {
         xAngle=_xAngle;
         yAngle=_yAngle;
         zAngle=_zAngle;
+        distance =dz;
         return ProcessImage(_src);
     }
     public static  Mat getOnlyRotatedImage()
@@ -153,6 +162,55 @@ public class ImageProcess {
         return output;
     }
 
+    public static  Mat MoonFilter (Mat inputMat)
+    {
+
+        float [] originValues={0, 15, 30, 50, 70, 90, 120, 160, 180, 210, 255 };
+        float [] values=      {0, 0, 5, 15, 60, 110, 150, 190, 210, 230, 255 };
+        Mat lookupTable=new Mat(1, 256, CV_8U);
+
+        for(int i=0; i<256; i++){
+            int j=0;
+            float a = i;
+            while (a>originValues[j]){
+                j++;
+            }
+            if(a == originValues[j]){
+
+                lookupTable.put(0,i,values[j]);
+
+
+                continue;
+            }
+            float slope = ((float)(values[j] - values[j-1]))/((float)(originValues[j] - originValues[j-1]));
+            float constant = values[j] - slope * originValues[j];
+
+            lookupTable.put(0,i,slope * a + constant);
+        }
+        Mat labMat =new Mat ();
+        cvtColor(inputMat,labMat, COLOR_BGR2Lab);
+
+        List<Mat> lab_list = new ArrayList(3);
+        Core.split(labMat,lab_list);
+        LUT(lab_list.get(0),lookupTable,lab_list.get(0));
+        merge(lab_list,labMat);
+        Mat hsvMat=new Mat();
+        cvtColor(labMat,hsvMat,COLOR_Lab2BGR);
+        cvtColor(hsvMat,hsvMat,COLOR_BGR2HSV);
+        Core.split(hsvMat,lab_list);
+        Core.multiply(lab_list.get(1),new Scalar(0.01f),lab_list.get(1));
+        Core.min(lab_list.get(1), new Scalar(255), lab_list.get(1));
+        Core.max(lab_list.get(1), new Scalar(0), lab_list.get(1));
+        Mat output=new Mat();
+        merge(lab_list,output);
+        cvtColor(output, output, COLOR_HSV2BGR);
+        return output;
+
+
+
+
+    }
+
     public static Mat WarmFilter (Mat inputMat)
     {
         /*
@@ -192,7 +250,7 @@ public class ImageProcess {
         }
         Mat maxIndex=lab_list.get(2).clone().setTo(new Scalar(255));
         Mat minIndex=lab_list.get(2).clone().setTo(new Scalar(0));
-        Core.LUT(lab_list.get(0),lookupTable,lab_list.get(0));
+        LUT(lab_list.get(0),lookupTable,lab_list.get(0));
         Core.min(lab_list.get(0),maxIndex,lab_list.get(0));
         Core.max(lab_list.get(0),minIndex,lab_list.get(0));
         Mat lookupTable2=new Mat(1, 256, CV_8U);
@@ -211,7 +269,7 @@ public class ImageProcess {
             float constant = blueValue[j] - slope * originalValue[j];
             lookupTable2.put(0,i,slope * xval + constant);
         }
-        Core.LUT(lab_list.get(2),lookupTable2,lab_list.get(2));
+        LUT(lab_list.get(2),lookupTable2,lab_list.get(2));
         Core.min(lab_list.get(2),maxIndex,lab_list.get(2));
         Core.min(lab_list.get(2),minIndex,lab_list.get(2));
         Core.merge(lab_list,result);
@@ -270,9 +328,10 @@ public class ImageProcess {
 
 
 
-    private static Mat RotateImage (Mat src,double xAngle,double yAngle,double zAngle)
+    private static Mat RotateImage (Mat src,double xAngle,double yAngle,double zAngle,double dz)
     {
-        double dx =0,dy=0,dz=200,f=200.;
+
+        double dx =0,dy=0,f=200.;
         xAngle = (xAngle - 90.)*Math.PI / 180.;
         yAngle = (yAngle - 90.)*Math.PI / 180.;
         zAngle = (zAngle - 90.)*Math.PI  / 180.;
@@ -346,7 +405,7 @@ public class ImageProcess {
         return out;
     }
     private static Mat ProcessImage(Mat _src) {
-        _src =RotateImage (_src,xAngle,yAngle,zAngle);
+        _src =RotateImage (_src,xAngle,yAngle,zAngle,distance);
         rotatedImage =_src.clone();
         Mat dst = Mat.zeros(_src.size(), _src.type());
         _src = Saturation(_src, SaturationValue);

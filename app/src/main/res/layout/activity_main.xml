@@ -77,6 +77,19 @@
                 android:layout_width="900px"
                 android:layout_height="wrap_content">
             </SeekBar>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Distance Z"
+                android:textColor="#FFFFFFFF"
+                ></TextView>
+            <SeekBar
+                android:id="@+id/distance_bar"
+                android:max="80"
+                android:progress="0"
+                android:layout_width="900px"
+                android:layout_height="wrap_content">
+            </SeekBar>
 
 
             <TextView
@@ -153,7 +166,6 @@
                 android:layout_width="1024px"
                 android:layout_height="wrap_content"
                 android:background="#AAAAAA"
-                android:orientation="horizontal"
                 >
                 <RadioButton
                     android:checked="true"
@@ -174,6 +186,12 @@
                     android:layout_width="300px"
                     android:layout_height="wrap_content"
                     android:text="Cartoon"
+                    android:textColor="#FFFFFF" />
+                <RadioButton
+                    android:id="@+id/moon_filter_radio"
+                    android:layout_width="300px"
+                    android:layout_height="wrap_content"
+                    android:text="Moon"
                     android:textColor="#FFFFFF" />
             </RadioGroup>
         </RelativeLayout>

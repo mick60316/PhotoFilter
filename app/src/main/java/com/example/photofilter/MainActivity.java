@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
 
     private RadioGroup filerGroup;
-    private SeekBar [] seekBars=new SeekBar[7];
+    private SeekBar [] seekBars=new SeekBar[8];
     private ScaleGestureDetector mScaleGestureDetector;
 
     private static  String MikeTAG ="Mike";
@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private int xAngle =90;
     private int yAngle =90;
     private int zAngle =90;
+    private int distance =200;
     private int [] seekBarInitValue = new int [seekBars.length];
 
 
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         processImage =srcImg.clone();
 
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
-        ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle);
+        ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle,distance);
       //  roiImage =new Mat(srcImg,roi);
         updateImageview(processImage);
 
@@ -133,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         seekBars[4] =findViewById(R.id.rotate_z_bar);
         seekBars[5] =findViewById(R.id.saturation_bar);
         seekBars[6] =findViewById(R.id.sharp_bar);
+        seekBars[7] =findViewById(R.id.distance_bar);
 
 
         for (int i =0;i<seekBars.length ;i++)
@@ -170,8 +172,12 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
                 case R.id.warm_filter_radio:
                     MikeLog("warm");
-
                     filerImage =ImageProcess.WarmFilter(processImage);
+                    updateImageview(filerImage);
+                    break;
+                case R.id.moon_filter_radio:
+                    MikeLog("Moon");
+                    filerImage =ImageProcess.MoonFilter(processImage);
                     updateImageview(filerImage);
                     break;
                 default:
@@ -214,6 +220,10 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
             switch(seekBar.getId())
             {
+                case R.id.distance_bar:
+                    distance =200-i;
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
+                    break;
                 case R.id.sharp_bar:
                     processImage=ImageProcess.getSharpImage(srcImgClone,i);
 
@@ -233,17 +243,17 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
                 case R.id.rotate_x_bar:
                     xAngle=90+i-12;
-                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
 
                     break;
                 case R.id.rotate_y_bar:
                     yAngle=90+i-12;
-                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
 
                     break;
                 case R.id.rotate_z_bar:
                     zAngle=90+i;
-                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
+                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
                     break;
 
             }
@@ -309,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                 case MotionEvent.ACTION_UP:
                     //MikeLog("UPUPUP");
                     if (filerImage ==null) {
-                     //   updateImageview(processImage);
+                        if (currentMode!=ROI_MODE)updateImageview(processImage);
                     }
                     else updateImageview(filerImage);
                     break;
@@ -359,33 +369,32 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         currentMode=FILTER_MODE;
         adjust_layout.setVisibility(View.INVISIBLE);
         filter_layout.setVisibility(View.VISIBLE);
+        processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
     }
     private void lockROIAndChangeLayout ()
     {
 
         srcImgClone=new Mat (srcImg,roi).clone();
         currentMode =ADJUST_MODE;
-        updateImageview(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
+        processImage=ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance);
+        updateImageview(processImage);
         adjust_layout.setVisibility(View.VISIBLE);
         roiOkButton.setVisibility(View.INVISIBLE);
 
     }
     private void setDefault ()
     {
-
- ;
-
-
         adjust_layout.setVisibility(View.INVISIBLE);
         filter_layout.setVisibility(View.INVISIBLE);
         roiOkButton.setVisibility(View.VISIBLE);
        // updateImageview(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
-        for (int i =0;i<seekBars.length ;i++) {
+        for (int i =0;i<seekBars.length ;i++)
+        {
             seekBars[i].setProgress(seekBarInitValue[i]);
 
         }
         currentMode = ROI_MODE;
-        ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle);
+        ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle,distance);
         filerImage=null;
 
         filerGroup.check(R.id.normal_filter_radio);
