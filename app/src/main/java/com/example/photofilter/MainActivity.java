@@ -6,13 +6,16 @@ import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
 import org.opencv.android.OpenCVLoader;
@@ -32,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private static final int ROI_MODE =0;
     private static final int ADJUST_MODE =1;
-
+    private static final int FILTER_MODE =2;
     private int currentMode =0;
 
 
@@ -43,7 +46,8 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private static  String MikeTAG ="Mike";
     private ImageView sourceImage;
     private Mat srcImg,srcImgClone,filerImage,processImage;
-    private Mat brightnessMask;
+    private RelativeLayout filter_layout;
+    private LinearLayout adjust_layout;
 
     private Rect roi =new Rect(0,0,700,700);
 
@@ -75,27 +79,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         // Example of a call to a native method
 
     }
-    private void setDefault ()
-    {
 
-
-        for (int i =0;i<seekBars.length ;i++) {
-            seekBars[i].setProgress(seekBarInitValue[i]);
-
-        }
-
-        if (filerGroup.getCheckedRadioButtonId()!=R.id.normal_filter_radio)
-        {
-            filerGroup.check(R.id.normal_filter_radio);
-           // updateImageview(processImage);
-        }
-
-        currentMode = ROI_MODE;
-        updateImageview(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
-
-
-
-    }
 
     @Override
     protected void onResume() {
@@ -118,12 +102,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         Bitmap bitmap =bitmapDrawable.getBitmap();
         Utils.bitmapToMat(bitmap,srcImg);
         processImage =srcImg.clone();
-
-        //Imgproc.cvtColor(srcImg,srcImg,Imgproc.COLOR_BGR2RGB);
-        Mat A1=new Mat(new Size(4,3),CV_32F);
-        A1.put(0,0,new double[]{1.0,2.0});
-        A1.put(0,1,1);
-
 
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
         ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle);
@@ -148,8 +126,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         filerGroup= findViewById(R.id.filer_group);
         sourceImage =findViewById(R.id.src_imageview);
         sourceImage.setOnTouchListener(imageViewTouchListener);
-
-
         seekBars[0] =findViewById(R.id.contrast_bar);
         seekBars[1] =findViewById(R.id.brightness_bar);
         seekBars[2] =findViewById(R.id.rotate_x_bar);
@@ -166,23 +142,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
         }
         filerGroup.setOnCheckedChangeListener(this);
-
         defalutButton =findViewById(R.id.default_button);
-        defalutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setDefault();
-            }
-        });
         roiOkButton=findViewById(R.id.roi_ok_button);
-        roiOkButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                srcImgClone=new Mat (srcImg,roi).clone();
-                currentMode =ADJUST_MODE;
-                updateImageview(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
-            }
-        });
+        filter_layout=findViewById(R.id.filter_layout);
+        adjust_layout=findViewById(R.id.adjust_layout);
+
 
 
     }
@@ -190,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int i) {
             if (processImage ==null)return ;
+            if (currentMode!=FILTER_MODE)return ;
             switch (i)
             {
                 case R.id.normal_filter_radio:
@@ -222,7 +187,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
     private void updateImageview (Mat inputMat)
     {
-        if (currentMode ==ROI_MODE) inputMat =new Mat (inputMat,roi);
+        if (currentMode ==ROI_MODE) {
+            System.out.println( " "+inputMat.rows()+" "+inputMat.cols() +" "+roi);
+
+            inputMat = new Mat(inputMat, roi);
+        }
         Bitmap newBp =Bitmap.createBitmap(inputMat.width(),inputMat.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(inputMat,newBp);
         sourceImage.setImageBitmap(newBp);
@@ -242,13 +211,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         @Override
         public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
 
-            MikeLog("onProgressChanged");
-            if (filerGroup.getCheckedRadioButtonId()!=R.id.normal_filter_radio)
-            {
-                filerGroup.check(R.id.normal_filter_radio);
-                filerImage =null;
-                updateImageview(processImage);
-            }
+
             switch(seekBar.getId())
             {
                 case R.id.sharp_bar:
@@ -284,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
 
             }
-            updateImageview(processImage);
+            if (currentMode==ADJUST_MODE) updateImageview(processImage);
         }
 
         @Override
@@ -373,8 +336,72 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         }
     }
 
+    public void onClick (View view)
+    {
+        switch (view.getId())
+        {
+            case R.id.default_button:
+                setDefault();
+                break;
+            case R.id.adjust_finish_button:
+                changeToFilterMode();
+                break;
+            case R.id.roi_ok_button:
+                lockROIAndChangeLayout();
+                break;
+            default:
+                break;
 
-    
+        }
+    }
+    private void changeToFilterMode ()
+    {
+        currentMode=FILTER_MODE;
+        adjust_layout.setVisibility(View.INVISIBLE);
+        filter_layout.setVisibility(View.VISIBLE);
+    }
+    private void lockROIAndChangeLayout ()
+    {
+
+        srcImgClone=new Mat (srcImg,roi).clone();
+        currentMode =ADJUST_MODE;
+        updateImageview(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle));
+        adjust_layout.setVisibility(View.VISIBLE);
+        roiOkButton.setVisibility(View.INVISIBLE);
+
+    }
+    private void setDefault ()
+    {
+
+ ;
+
+
+        adjust_layout.setVisibility(View.INVISIBLE);
+        filter_layout.setVisibility(View.INVISIBLE);
+        roiOkButton.setVisibility(View.VISIBLE);
+       // updateImageview(ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle));
+        for (int i =0;i<seekBars.length ;i++) {
+            seekBars[i].setProgress(seekBarInitValue[i]);
+
+        }
+        currentMode = ROI_MODE;
+        ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle);
+        filerImage=null;
+
+        filerGroup.check(R.id.normal_filter_radio);
+        updateImageview(srcImg);
+
+
+
+
+
+    }
+
+
+
+
+
+
 
 
 }

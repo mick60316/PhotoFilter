@@ -27,7 +27,9 @@
             android:text="Lock"
             android:layout_marginTop="670px"
             android:layout_height="100px"
-            android:layout_width="200px">
+            android:layout_width="200px"
+            android:onClick="onClick"
+            >
         </Button>
         <LinearLayout
             android:id="@+id/adjust_layout"
@@ -133,7 +135,9 @@
                 android:id="@+id/adjust_finish_button"
                 android:text="Finish"
                 android:layout_width="300px"
-                android:layout_height="150px">
+                android:layout_height="150px"
+                android:onClick="onClick"
+                >
             </Button>
 
         </LinearLayout>
@@ -179,6 +183,7 @@
             android:layout_height="150px"
             android:text="default"
             android:layout_marginTop="1800px"
+            android:onClick="onClick"
             ></Button>
 
 
