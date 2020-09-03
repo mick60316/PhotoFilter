@@ -15,7 +15,9 @@ import org.opencv.utils.Converters;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.cos;
+import static java.lang.Math.max;
 import static java.lang.Math.sin;
 import static org.opencv.core.Core.LUT;
 import static org.opencv.core.Core.merge;
@@ -60,10 +62,17 @@ public class ImageProcess {
                 a rotated image
 
         */
+
+        double maxValue = max(abs( 90- _xAngle),abs(90-_yAngle));
+        maxValue=max(maxValue,abs(90- _zAngle));
+
+        distance=maxValue*-10+200;
+        Log.i("test",""+_xAngle+" "+_yAngle+" "+_zAngle);
+
         xAngle=_xAngle;
         yAngle=_yAngle;
         zAngle=_zAngle;
-        distance =dz;
+        //distance =dz;
         return ProcessImage(_src);
     }
     public static  Mat getOnlyRotatedImage()

@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.text.Layout;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -22,9 +21,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
-import org.opencv.core.Size;
 
-import static org.opencv.core.CvType.CV_32F;
 import static org.opencv.imgproc.Imgproc.findContours;
 import static org.opencv.imgproc.Imgproc.warpPerspective;
 import static org.opencv.photo.Photo.edgePreservingFilter;
@@ -40,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
 
     private RadioGroup filerGroup;
-    private SeekBar [] seekBars=new SeekBar[8];
+    private SeekBar [] seekBars=new SeekBar[7];
     private ScaleGestureDetector mScaleGestureDetector;
 
     private static  String MikeTAG ="Mike";
@@ -64,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
     private int zAngle =90;
     private int distance =200;
     private int [] seekBarInitValue = new int [seekBars.length];
+    private ImageView [] filterImages = new ImageView[4];
+
+
 
 
     // Used to load the 'native-lib' library on application startup.
@@ -134,7 +134,11 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         seekBars[4] =findViewById(R.id.rotate_z_bar);
         seekBars[5] =findViewById(R.id.saturation_bar);
         seekBars[6] =findViewById(R.id.sharp_bar);
-        seekBars[7] =findViewById(R.id.distance_bar);
+        filterImages[0] =findViewById(R.id.normal_filter_image);
+        filterImages[1]=findViewById(R.id.warm_filter_image);
+        filterImages[2] =findViewById(R.id.cartoon_filter_image);
+        filterImages[3]=findViewById(R.id.moon_filter_image);
+        //seekBars[7] =findViewById(R.id.distance_bar);
 
 
         for (int i =0;i<seekBars.length ;i++)
@@ -148,8 +152,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         roiOkButton=findViewById(R.id.roi_ok_button);
         filter_layout=findViewById(R.id.filter_layout);
         adjust_layout=findViewById(R.id.adjust_layout);
-
-
 
     }
 
@@ -189,8 +191,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         Log.i(MikeTAG,msg);
     }
 
-
-
     private void updateImageview (Mat inputMat)
     {
         if (currentMode ==ROI_MODE) {
@@ -220,10 +220,10 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
 
             switch(seekBar.getId())
             {
-                case R.id.distance_bar:
-                    distance =200-i;
-                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
-                    break;
+//                case R.id.distance_bar:
+//                    distance =200-i;
+//                    processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
+//                    break;
                 case R.id.sharp_bar:
                     processImage=ImageProcess.getSharpImage(srcImgClone,i);
 
@@ -242,17 +242,17 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
                     break;
 
                 case R.id.rotate_x_bar:
-                    xAngle=90+i-12;
+                    xAngle=90+i-10;
                     processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
 
                     break;
                 case R.id.rotate_y_bar:
-                    yAngle=90+i-12;
+                    yAngle=90+i-10;
                     processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
 
                     break;
                 case R.id.rotate_z_bar:
-                    zAngle=90+i;
+                    zAngle=90+i-10;
                     processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
                     break;
 
@@ -359,6 +359,21 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
             case R.id.roi_ok_button:
                 lockROIAndChangeLayout();
                 break;
+            case R.id.cartoon_filter_image:
+                filerImage =ImageProcess.CartoonFilter(processImage);
+                sourceImage.setImageBitmap(((BitmapDrawable)filterImages[2].getDrawable()).getBitmap());
+                break;
+            case R.id.warm_filter_image:
+                filerImage =ImageProcess.WarmFilter(processImage);
+                sourceImage.setImageBitmap(((BitmapDrawable)filterImages[1].getDrawable()).getBitmap());
+                break;
+            case R.id.moon_filter_image:
+                filerImage =ImageProcess.MoonFilter(processImage);
+                sourceImage.setImageBitmap( ((BitmapDrawable)filterImages[3].getDrawable()).getBitmap());
+                break;
+            case R.id.normal_filter_image:
+                sourceImage.setImageBitmap(((BitmapDrawable)filterImages[0].getDrawable()).getBitmap());
+                break;
             default:
                 break;
 
@@ -370,7 +385,26 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         adjust_layout.setVisibility(View.INVISIBLE);
         filter_layout.setVisibility(View.VISIBLE);
         processImage=(ImageProcess.getRotationImage(srcImgClone,xAngle,yAngle,zAngle,distance));
+
+        Mat []filterMat = new Mat[4];
+
+        filterMat[0]=processImage.clone();
+        filterMat[1]=ImageProcess.WarmFilter(processImage);
+        filterMat[2]=ImageProcess.CartoonFilter(processImage);
+        filterMat[3]=ImageProcess.MoonFilter(processImage);
+
+        for (int i =0;i<filterMat.length ;i++)
+        {
+            updateFilterImageButton(filterImages[i],filterMat[i]);
+        }
     }
+    private void updateFilterImageButton (ImageView imageview,Mat srcMat)
+    {
+        Bitmap newBp =Bitmap.createBitmap(srcMat.width(),srcMat.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(srcMat,newBp);
+        imageview.setImageBitmap(newBp);
+    }
+
     private void lockROIAndChangeLayout ()
     {
 
@@ -380,7 +414,6 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         updateImageview(processImage);
         adjust_layout.setVisibility(View.VISIBLE);
         roiOkButton.setVisibility(View.INVISIBLE);
-
     }
     private void setDefault ()
     {
@@ -391,26 +424,12 @@ public class MainActivity extends AppCompatActivity implements RadioGroup.OnChec
         for (int i =0;i<seekBars.length ;i++)
         {
             seekBars[i].setProgress(seekBarInitValue[i]);
-
         }
         currentMode = ROI_MODE;
         ImageProcess.getRotationImage(srcImg,xAngle,yAngle,zAngle,distance);
         filerImage=null;
-
         filerGroup.check(R.id.normal_filter_radio);
         updateImageview(srcImg);
-
-
-
-
-
     }
-
-
-
-
-
-
-
 
 }

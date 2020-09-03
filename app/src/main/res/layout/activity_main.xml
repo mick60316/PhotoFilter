@@ -26,8 +26,8 @@
             android:id="@+id/roi_ok_button"
             android:text="Lock"
             android:layout_marginTop="670px"
-            android:layout_height="100px"
-            android:layout_width="200px"
+            android:layout_height="150px"
+            android:layout_width="300px"
             android:onClick="onClick"
             >
         </Button>
@@ -46,10 +46,10 @@
                 ></TextView>
             <SeekBar
                 android:id="@+id/rotate_x_bar"
-                android:max="24"
-                android:progress="12"
+                android:max="20"
+                android:progress="10"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="100px">
             </SeekBar>
             <TextView
                 android:layout_width="wrap_content"
@@ -59,10 +59,10 @@
                 ></TextView>
             <SeekBar
                 android:id="@+id/rotate_y_bar"
-                android:max="24"
-                android:progress="12"
+                android:max="20"
+                android:progress="10"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="75px">
             </SeekBar>
             <TextView
                 android:layout_width="wrap_content"
@@ -72,23 +72,10 @@
                 ></TextView>
             <SeekBar
                 android:id="@+id/rotate_z_bar"
-                android:max="360"
-                android:progress="0"
+                android:max="20"
+                android:progress="10"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
-            </SeekBar>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Distance Z"
-                android:textColor="#FFFFFFFF"
-                ></TextView>
-            <SeekBar
-                android:id="@+id/distance_bar"
-                android:max="80"
-                android:progress="0"
-                android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="75px">
             </SeekBar>
 
 
@@ -103,7 +90,7 @@
                 android:max="200"
                 android:progress="100"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="75px">
             </SeekBar>
             <TextView
                 android:layout_width="wrap_content"
@@ -116,7 +103,7 @@
                 android:max="200"
                 android:progress="100"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="75px">
             </SeekBar>
             <TextView
                 android:layout_width="wrap_content"
@@ -129,12 +116,12 @@
                 android:max="200"
                 android:progress="100"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="75px">
             </SeekBar>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="sharp"
+                android:text="Sharp"
                 android:textColor="#FFFFFFFF"
                 ></TextView>
             <SeekBar
@@ -142,7 +129,7 @@
                 android:max="500"
                 android:progress="0"
                 android:layout_width="900px"
-                android:layout_height="wrap_content">
+                android:layout_height="75px">
             </SeekBar>
             <Button
                 android:id="@+id/adjust_finish_button"
@@ -156,12 +143,92 @@
         </LinearLayout>
         <RelativeLayout
             android:id="@+id/filter_layout"
-            android:visibility="invisible"
             android:layout_width="match_parent"
-            android:layout_marginTop="800px"
+            android:visibility="invisible"
+            android:layout_marginTop="900px"
+            android:layout_marginLeft="75px"
             android:layout_height="match_parent">
+            <ImageView
+                android:layout_marginLeft="100px"
+                android:layout_width="300px"
+                android:layout_height="300px"
+                android:onClick="onClick"
+                android:id="@+id/normal_filter_image"
+                android:background="#FFFFFFFF">
+            </ImageView>
+            <TextView
+                android:text="Normal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+
+                android:layout_marginTop="320px"
+                android:layout_marginLeft="170px"
+                ></TextView>
+            <ImageView
+                android:layout_marginLeft="500px"
+                android:layout_width="300px"
+                android:layout_height="300px"
+                android:onClick="onClick"
+                android:id="@+id/warm_filter_image"
+                android:background="#FFFFFFFF">
+            </ImageView>
+            <TextView
+                android:text="Warm"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+
+                android:layout_marginTop="320px"
+                android:layout_marginLeft="570px"
+                ></TextView>
+
+
+            <ImageView
+                android:layout_marginTop="450px"
+                android:layout_marginLeft="100px"
+                android:layout_width="300px"
+                android:layout_height="300px"
+                android:onClick="onClick"
+                android:id="@+id/cartoon_filter_image"
+                android:background="#FFFFFFFF">
+            </ImageView>
+            <TextView
+                android:text="Moon"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+
+                android:layout_marginTop="770px"
+                android:layout_marginLeft="570px"
+                ></TextView>
+            <ImageView
+                android:layout_marginTop="450px"
+                android:layout_marginLeft="500px"
+                android:layout_width="300px"
+                android:layout_height="300px"
+                android:onClick="onClick"
+                android:id="@+id/moon_filter_image"
+                android:background="#FFFFFFFF">
+            </ImageView>
+            <TextView
+                android:text="Cartoon"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+
+                android:layout_marginTop="770px"
+                android:layout_marginLeft="170px"
+                ></TextView>
+
+
+
             <RadioGroup
                 android:id="@+id/filer_group"
+                android:visibility="invisible"
                 android:layout_marginTop="30px"
                 android:layout_width="1024px"
                 android:layout_height="wrap_content"
@@ -195,16 +262,16 @@
                     android:textColor="#FFFFFF" />
             </RadioGroup>
         </RelativeLayout>
+
         <Button
             android:id="@+id/default_button"
             android:layout_width="300px"
             android:layout_height="150px"
             android:text="default"
-            android:layout_marginTop="1800px"
+            android:layout_marginTop="670px"
+            android:layout_marginLeft="700px"
             android:onClick="onClick"
             ></Button>
-
-
 
     </RelativeLayout>
 
